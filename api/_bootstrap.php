@@ -8,9 +8,13 @@ declare(strict_types=1);
 
 $root = dirname(__DIR__);
 require_once $root . '/config/config.php';
+require_once $root . '/services/LocaleService.php';
 require_once $root . '/lang/Lang.php';
+LocaleService::initFromRequest();
+Lang::setLocale(LocaleService::getAppLocale());
 require_once $root . '/services/CacheService.php';
 require_once $root . '/services/PokeApiService.php';
+require_once $root . '/services/TranslationCache.php';
 require_once $root . '/services/PokeLocalizedStrings.php';
 require_once $root . '/services/TypeChart.php';
 require_once $root . '/services/DatabaseService.php';
