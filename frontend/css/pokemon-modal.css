@@ -1,0 +1,95 @@
+/* ——— Modal / drawer detalhe ——— */
+.modal-pokedex.modal .modal-dialog {
+  max-width: min(920px, 96vw);
+}
+
+@media (max-width: 767.98px) {
+  .modal-pokedex.modal .modal-dialog {
+    margin: 0;
+    max-width: 100%;
+    min-height: 100%;
+  }
+
+  .modal-pokedex.modal .modal-content {
+    min-height: 100vh;
+    border-radius: 0;
+  }
+}
+
+.pk-detail-shell .pk-sprite-stage {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 50% 40%, rgba(76, 201, 240, 0.12), transparent 70%);
+  border-radius: var(--pk-radius);
+}
+
+.pk-detail-shell .modal-pokemon-img,
+.pk-detail-shell .pk-sprite-alt {
+  max-height: 220px;
+  object-fit: contain;
+  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.2));
+}
+
+.pk-detail-tabs {
+  border-bottom-color: var(--pk-border) !important;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.pk-detail-tabs .nav-link {
+  font-size: 0.78rem;
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--pk-muted);
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+}
+
+.pk-detail-tabs .nav-link.active {
+  color: var(--pk-red);
+  border-bottom-color: var(--pk-red);
+  background: transparent;
+}
+
+.pk-tab-panels {
+  min-height: 200px;
+}
+
+.lore-text {
+  line-height: 1.65;
+  color: var(--pk-ink);
+}
+
+.matchup-block .type-badge {
+  font-size: 0.72rem;
+}
+
+.bio-grid {
+  line-height: 1.6;
+}
+
+.pk-detail-shell .rarity-legendary,
+.pk-detail-shell .rarity-mythical,
+.pk-detail-shell .rarity-rare,
+.pk-detail-shell .rarity-common,
+.pk-detail-shell .rarity-baby {
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 0.25em 0.55em;
+  border-radius: var(--pk-radius-pill);
+}
+
+.pk-detail-shell .evolution-card {
+  cursor: pointer;
+  transition: transform var(--pk-duration-fast);
+  max-width: 120px;
+}
+
+.pk-detail-shell .evolution-card:hover {
+  transform: scale(1.04);
+}

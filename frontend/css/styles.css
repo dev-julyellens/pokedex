@@ -5,6 +5,8 @@
 @import url("animations.css");
 @import url("theme.css");
 @import url("components.css");
+@import url("pokemon-card.css");
+@import url("pokemon-modal.css");
 
 /* ——— Accordion histórico ——— */
 .sidebar-history-accordion .history-accordion-label-expanded {
