@@ -19,7 +19,7 @@ class PokemonStorageModel
         $pdo = $pdo ?? DatabaseService::getPdo();
         if ($pdo === null)
         {
-            throw new RuntimeException('PDO indisponível.');
+            throw new RuntimeException(Lang::get('pdo_unavailable'));
         }
         $this->pdo = $pdo;
         $dsn = DB_DSN;
