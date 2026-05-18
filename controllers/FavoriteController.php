@@ -25,7 +25,7 @@ class FavoriteController
             {
                 JsonView::json(['success' => true, 'data' => [], 'db' => false]);
             }
-            JsonView::json(['success' => false, 'error' => 'Banco de dados não configurado.', 'db' => false], 503);
+            JsonView::json(['success' => false, 'error' => Lang::get('db_not_configured'), 'db' => false], 503);
         }
 
         switch ($method)
@@ -39,7 +39,7 @@ class FavoriteController
                 $body = is_string($raw) ? json_decode($raw, true) : null;
                 if (!is_array($body))
                 {
-                    JsonView::error('JSON inválido.', 400);
+                    JsonView::error(Lang::get('invalid_json'), 400);
                 }
                 $pid = isset($body['pokemon_id']) ? (int) $body['pokemon_id'] : 0;
                 $nome = isset($body['nome']) ? (string) $body['nome'] : '';
@@ -47,7 +47,7 @@ class FavoriteController
                 {
                     JsonView::json(['success' => true]);
                 }
-                JsonView::error('Não foi possível favoritar (duplicado ou inválido).', 400);
+                JsonView::error(Lang::get('favorite_add_failed'), 400);
                 break;
 
             case 'DELETE':
@@ -61,11 +61,11 @@ class FavoriteController
                 {
                     JsonView::json(['success' => true]);
                 }
-                JsonView::error('Favorito não encontrado.', 404);
+                JsonView::error(Lang::get('favorite_not_found'), 404);
                 break;
 
             default:
-                JsonView::error('Método não suportado.', 405);
+                JsonView::error(Lang::get('method_not_supported'), 405);
         }
     }
 }
