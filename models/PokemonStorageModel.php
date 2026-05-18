@@ -247,6 +247,87 @@ class PokemonStorageModel
     }
 
     /**
+     * Tipos a partir de detalhes já cacheados (evita chamadas à PokeAPI na listagem).
+     *
+     * @param list<int> $ids
+     * @return array<int, list<array{slug:string,label:string}>>
+     */
+    public function fetchTypesFromDetailByIds(array $ids): array
+    {
+        $ids = array_values(array_unique(array_filter(array_map('intval', $ids), static fn (int $x): bool => $x > 0)));
+        if ($ids === [])
+        {
+            return [];
+        }
+        $ph = implode(',', array_fill(0, count($ids), '?'));
+        $stmt = $this->pdo->prepare("SELECT id, payload FROM pokemon_detail WHERE id IN ($ph)");
+        $stmt->execute($ids);
+        $out = [];
+        while ($row = $stmt->fetch())
+        {
+            if (!is_array($row))
+            {
+                continue;
+            }
+            $id = (int) ($row['id'] ?? 0);
+            if ($id <= 0)
+            {
+                continue;
+            }
+            $raw = $row['payload'] ?? null;
+            if (!is_string($raw) || $raw === '')
+            {
+                continue;
+            }
+            try
+            {
+                $data = json_decode($raw, true, 512, JSON_THROW_ON_ERROR);
+            }
+            catch (Throwable)
+            {
+                continue;
+            }
+            if (!is_array($data))
+            {
+                continue;
+            }
+            $pokemon = $data['pokemon'] ?? null;
+            if (!is_array($pokemon))
+            {
+                continue;
+            }
+            $types = $pokemon['types'] ?? null;
+            if (!is_array($types) || $types === [])
+            {
+                continue;
+            }
+            $parsed = [];
+            foreach ($types as $t)
+            {
+                if (!is_array($t))
+                {
+                    continue;
+                }
+                $slug = strtolower((string) ($t['slug'] ?? ''));
+                if ($slug === '')
+                {
+                    continue;
+                }
+                $parsed[] = [
+                    'slug' => $slug,
+                    'label' => (string) ($t['label'] ?? PokeLocalizedStrings::typeLabelPt($slug)),
+                ];
+            }
+            if ($parsed !== [])
+            {
+                $out[$id] = $parsed;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
      * Detalhe completo (JSON) cacheado após primeira montagem.
      *
      * @return array<string,mixed>|null
