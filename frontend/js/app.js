@@ -4,6 +4,19 @@
 (function () {
   'use strict';
 
+  const t =
+    typeof window.PokedexT === 'function'
+      ? window.PokedexT
+      : function (key, repl) {
+          let s = (window.PokedexLang && window.PokedexLang[key]) || key;
+          if (repl && typeof repl === 'object') {
+            Object.keys(repl).forEach((k) => {
+              s = String(s).replace(new RegExp('\\{' + k + '\\}', 'g'), String(repl[k]));
+            });
+          }
+          return s;
+        };
+
   const API_BASE = (function () {
     const path = window.location.pathname || '/';
     const idx = path.indexOf('/frontend');
@@ -174,7 +187,7 @@
         localStorage.setItem(LS_SOUND, on ? '1' : '0');
       } catch (e) {}
       syncIcon();
-      showToast(on ? 'Som ativado' : 'Som desativado');
+      showToast(on ? t('sound_on') : t('sound_off'));
     });
   }
 
@@ -234,13 +247,13 @@
     if (!els.achievementsList) return;
     const s = readStats();
     const milestones = [
-      { k: 'views', n: 1, label: 'Ver 1 detalhe' },
-      { k: 'views', n: 5, label: 'Ver 5 detalhes' },
-      { k: 'views', n: 25, label: 'Ver 25 detalhes' },
-      { k: 'favadd', n: 1, label: '1 favorito adicionado' },
-      { k: 'favadd', n: 5, label: '5 favoritos' },
-      { k: 'quizHits', n: 1, label: 'Acertar 1 quiz' },
-      { k: 'quizHits', n: 10, label: 'Acertar 10 quizzes' },
+      { k: 'views', n: 1, label: t('achievement_view_1') },
+      { k: 'views', n: 5, label: t('achievement_view_5') },
+      { k: 'views', n: 25, label: t('achievement_view_25') },
+      { k: 'favadd', n: 1, label: t('achievement_fav_1') },
+      { k: 'favadd', n: 5, label: t('achievement_fav_5') },
+      { k: 'quizHits', n: 1, label: t('achievement_quiz_1') },
+      { k: 'quizHits', n: 10, label: t('achievement_quiz_10') },
     ];
     const lines = milestones.map((m) => {
       const v = m.k === 'views' ? s.views : m.k === 'favadd' ? s.favAdds : s.quizHits;
@@ -280,7 +293,7 @@
     if (!els.recentList) return;
     const list = readRecent();
     if (!list.length) {
-      els.recentList.innerHTML = '<li class="list-group-item small text-muted">Abra um Pokémon para preencher.</li>';
+      els.recentList.innerHTML = `<li class="list-group-item small text-muted">${escapeHtml(t('recent_empty'))}</li>`;
       return;
     }
     els.recentList.innerHTML = list
@@ -334,7 +347,7 @@
     try {
       const json = await fetchJson(API_BASE + 'favorites.php');
       if (json.db === false) {
-        showToast('Configure o banco para usar favoritos.', true);
+        showToast(t('configure_db_favorites'), true);
         return;
       }
       const blob = new Blob([JSON.stringify(json.data || [], null, 2)], { type: 'application/json' });
@@ -343,16 +356,16 @@
       a.download = 'pokedex-favoritos.json';
       a.click();
       URL.revokeObjectURL(a.href);
-      showToast('Exportação concluída.');
+      showToast(t('export_done'));
     } catch (e) {
-      showToast(e.message || 'Falha ao exportar', true);
+      showToast(e.message || t('export_failed'), true);
     }
   }
 
   async function importFavoritesFromFile(file) {
     const text = await file.text();
     const rows = JSON.parse(text);
-    if (!Array.isArray(rows)) throw new Error('JSON inválido');
+    if (!Array.isArray(rows)) throw new Error(t('invalid_json'));
     let ok = 0;
     for (const r of rows) {
       const id = r.pokemon_id != null ? parseInt(String(r.pokemon_id), 10) : parseInt(String(r.id || '0'), 10);
@@ -368,7 +381,7 @@
       } catch (e) {}
     }
     await refreshFavorites();
-    showToast(ok ? `Importados ${ok} favorito(s).` : 'Nenhum favorito novo importado.');
+    showToast(ok ? t('import_done', { count: ok }) : t('import_none'));
   }
 
   function statValueNum(v) {
@@ -444,8 +457,8 @@
     }
     cells.push(`
         <div class="compare-stat-name">Total base (BST)</div>
-        <div class="compare-stat-val ${cBST[0]}" aria-label="Soma das stats base">${bstA}</div>
-        <div class="compare-stat-val ${cBST[1]}" aria-label="Soma das stats base">${bstB}</div>`);
+        <div class="compare-stat-val ${cBST[0]}" aria-label="${escapeHtml(t('compare_stat_sum'))}">${bstA}</div>
+        <div class="compare-stat-val ${cBST[1]}" aria-label="${escapeHtml(t('compare_stat_sum'))}">${bstB}</div>`);
     const shortA = escapeHtml((pA.name_display || pA.name || 'A').split(' ')[0]);
     const shortB = escapeHtml((pB.name_display || pB.name || 'B').split(' ')[0]);
     const summaryParts = [];
@@ -464,7 +477,7 @@
         : '';
 
     return `
-      <div class="compare-board" role="table" aria-label="Comparação de stats base">
+      <div class="compare-board" role="table" aria-label="${escapeHtml(t('compare_table_label'))}">
         <div class="compare-board-corner" aria-hidden="true"></div>
         <div class="compare-board-poke">
           <img src="${imgA}" class="compare-head-img mb-2" alt="" onerror="this.onerror=null;this.src='${pokemonSpriteUrl(pA.id)}'">
@@ -485,11 +498,11 @@
     const a = (els.compareA && els.compareA.value.trim()) || '';
     const b = (els.compareB && els.compareB.value.trim()) || '';
     if (!a || !b) {
-      showToast('Informe os dois Pokémon.', true);
+      showToast(t('compare_inform_both'), true);
       return;
     }
     if (!els.compareResult) return;
-    els.compareResult.innerHTML = '<p class="text-muted mb-0">Carregando…</p>';
+    els.compareResult.innerHTML = `<p class="text-muted mb-0">${escapeHtml(t('loading'))}</p>`;
     try {
       const qa = /^\d+$/.test(a) ? 'id=' + encodeURIComponent(a) : 'name=' + encodeURIComponent(a.toLowerCase());
       const qb = /^\d+$/.test(b) ? 'id=' + encodeURIComponent(b) : 'name=' + encodeURIComponent(b.toLowerCase());
@@ -499,10 +512,10 @@
       ]);
       const pa = ja.data && ja.data.pokemon ? ja.data.pokemon : null;
       const pb = jb.data && jb.data.pokemon ? jb.data.pokemon : null;
-      if (!pa || !pb) throw new Error('Resposta incompleta');
+      if (!pa || !pb) throw new Error(t('compare_incomplete'));
       els.compareResult.innerHTML = renderCompareBoard(pa, pb);
     } catch (e) {
-      els.compareResult.innerHTML = `<p class="text-danger mb-0">${escapeHtml(e.message || 'Erro')}</p>`;
+      els.compareResult.innerHTML = `<p class="text-danger mb-0">${escapeHtml(e.message || t('error'))}</p>`;
     }
   }
 
@@ -580,11 +593,11 @@
         await new Promise((r) => setTimeout(r, 300 * 2 ** (attempt - 1)));
         return fetchJson(url, options, attempt + 1);
       }
-      throw netErr instanceof Error ? netErr : new Error('Falha de rede');
+      throw netErr instanceof Error ? netErr : new Error(t('network_failure'));
     }
     const data = await res.json().catch(() => ({}));
     if (!res.ok || data.success === false) {
-      const err = data.error || res.statusText || 'Erro na requisição';
+      const err = data.error || res.statusText || t('request_error');
       if (
         attempt < maxAttempts &&
         (res.status === 429 || res.status === 502 || res.status === 503 || res.status === 504)
@@ -667,13 +680,14 @@
       </div>`;
   }
 
-  function buildListUrl(page) {
+  function buildListUrl(page, limitOverride) {
+    const limit = limitOverride != null ? limitOverride : state.perPage;
     let url =
       API_BASE +
       'list.php?page=' +
       encodeURIComponent(String(page)) +
       '&limit=' +
-      encodeURIComponent(String(state.perPage));
+      encodeURIComponent(String(limit));
     const region = els.regionFilter && els.regionFilter.value ? els.regionFilter.value.trim() : '';
     if (region) {
       url += '&region=' + encodeURIComponent(region);
@@ -744,11 +758,15 @@
       o = JSON.parse(localStorage.getItem(LS_REGION_SEEN) || '{}');
     } catch (e) {}
     const arr = o[k] || [];
-    const label = k === '__national__' ? 'Pokédex nacional' : k;
+    const label = k === '__national__' ? t('progress_national') : k;
     const total = state.total || 0;
-    els.regionProgress.innerHTML = `<span class="text-body-secondary">${escapeHtml(label)}: <strong class="text-body">${arr.length}</strong> espécies únicas abertas nos detalhes${
-      total ? ` · lista atual: <strong class="text-body">${total}</strong> entradas` : ''
-    }</span>`;
+    els.regionProgress.innerHTML = `<span class="text-body-secondary">${escapeHtml(
+      t('progress_species', {
+        label,
+        count: arr.length,
+        extra: total ? ` · ${t('progress_list_current', { total })}` : '',
+      })
+    )}</span>`;
   }
 
   function applyDensityUi() {
@@ -760,7 +778,7 @@
     } catch (e) {}
     wrap.classList.toggle('catalog-density-compact', mode === 'compact');
     if (els.btnDensity) {
-      els.btnDensity.title = mode === 'compact' ? 'Vista confortável' : 'Vista compacta';
+      els.btnDensity.title = mode === 'compact' ? t('density_comfortable') : t('density_compact');
     }
   }
 
@@ -770,7 +788,7 @@
       localStorage.setItem(LS_DENSITY, cur === 'compact' ? 'comfy' : 'compact');
     } catch (e) {}
     applyDensityUi();
-    showToast('Densidade da lista alterada.');
+    showToast(t('density_changed'));
   }
 
   function initA11yFromStorage() {
@@ -797,7 +815,7 @@
       localStorage.setItem(LS_FONT_SCALE, String(s));
     } catch (e) {}
     document.documentElement.style.setProperty('--pk-font-scale', String(s));
-    showToast('Tamanho do texto ajustado.');
+    showToast(t('font_adjusted'));
   }
 
   function toggleHighContrast() {
@@ -806,14 +824,161 @@
     try {
       localStorage.setItem(LS_HIGH_CONTRAST, on ? '1' : '0');
     } catch (e) {}
-    showToast(on ? 'Alto contraste ativado' : 'Alto contraste desativado');
+    showToast(on ? t('high_contrast_on') : t('high_contrast_off'));
   }
 
   let quizAnswerName = '';
+  let quizPrefetchPromise = null;
+  const QUIZ_LIST_LIMIT = 32;
+
+  function shuffleArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const t = arr[i];
+      arr[i] = arr[j];
+      arr[j] = t;
+    }
+    return arr;
+  }
+
+  function getQuizTotalPages() {
+    const perPage = Math.max(1, state.perPage || 20);
+    if (state.totalPages > 0) return state.totalPages;
+    const total = Math.max(1, state.total || 1025);
+    return Math.max(1, Math.ceil(total / perPage));
+  }
+
+  function mergeUniquePokemonPool(a, b) {
+    const seen = new Set();
+    const out = [];
+    for (const it of [...a, ...b]) {
+      const name = it && it.name != null ? String(it.name) : '';
+      if (!name || seen.has(name)) continue;
+      seen.add(name);
+      out.push(it);
+    }
+    return out;
+  }
+
+  async function fetchQuizListPage(page) {
+    const j = await fetchJson(buildListUrl(page, QUIZ_LIST_LIMIT));
+    const items = (j.data && j.data.items) || [];
+    return items.filter((it) => it && it.name != null && it.id != null);
+  }
+
+  async function fetchQuizRoundDataByIds() {
+    const maxId = Math.max(1, state.total || 1025);
+    const ids = new Set();
+    let guard = 0;
+    while (ids.size < 4 && guard < 50) {
+      guard += 1;
+      ids.add(Math.floor(Math.random() * maxId) + 1);
+    }
+    const results = await Promise.all(
+      [...ids].map((id) =>
+        fetchJson(API_BASE + 'pokemon.php?id=' + encodeURIComponent(String(id)))
+          .then((j) => (j.data && j.data.pokemon ? j.data.pokemon : null))
+          .catch(() => null)
+      )
+    );
+    const pool = results.filter((p) => p && p.name);
+    if (pool.length < 4) throw new Error(t('no_data'));
+    const correct = pool[Math.floor(Math.random() * pool.length)];
+    const opts = shuffleArray(pool.map((p) => String(p.name)));
+    return {
+      correctName: String(correct.name),
+      correctImage:
+        correct.image ||
+        'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/' +
+          correct.id +
+          '.png',
+      options: opts,
+    };
+  }
+
+  async function fetchQuizRoundData() {
+    const totalPages = getQuizTotalPages();
+    const page = Math.floor(Math.random() * totalPages) + 1;
+    let pool = await fetchQuizListPage(page);
+    if (pool.length < 4 && totalPages > 1) {
+      let alt = page;
+      let tries = 0;
+      while (alt === page && tries < 8) {
+        tries += 1;
+        alt = Math.floor(Math.random() * totalPages) + 1;
+      }
+      if (alt !== page) {
+        pool = mergeUniquePokemonPool(pool, await fetchQuizListPage(alt));
+      }
+    }
+    if (pool.length < 4) {
+      return fetchQuizRoundDataByIds();
+    }
+    const picked = shuffleArray(pool.slice()).slice(0, 4);
+    const correct = picked[Math.floor(Math.random() * picked.length)];
+    const opts = shuffleArray(picked.map((p) => String(p.name)));
+    return {
+      correctName: String(correct.name),
+      correctImage: correct.image || pokemonSpriteUrl(correct.id),
+      options: opts,
+    };
+  }
+
+  function prefetchNextQuizRound() {
+    if (quizPrefetchPromise) return;
+    quizPrefetchPromise = fetchQuizRoundData().catch(() => null);
+  }
+
+  function quizShowChoiceSkeletons() {
+    if (!els.quizChoices) return;
+    els.quizChoices.innerHTML = Array(4)
+      .fill(
+        '<button type="button" class="btn btn-outline-secondary answer-option placeholder-glow" disabled aria-hidden="true"><span class="placeholder col-8 mx-auto"></span></button>'
+      )
+      .join('');
+  }
+
+  function renderQuizRound(round) {
+    if (!round || !els.quizSilhouette || !els.quizChoices || !els.quizFeedback) return;
+    quizAnswerName = round.correctName;
+    els.quizSilhouette.src = round.correctImage;
+    els.quizSilhouette.alt = 'Silhueta';
+    els.quizFeedback.textContent = t('quiz_question');
+    els.quizChoices.innerHTML = round.options
+      .map(
+        (n) =>
+          `<button type="button" class="btn btn-outline-primary quiz-choice-btn answer-option text-capitalize" data-name="${escapeHtml(n)}">${escapeHtml(
+            n.replace(/-/g, ' ')
+          )}</button>`
+      )
+      .join('');
+    els.quizChoices.querySelectorAll('.answer-option').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        if (btn.classList.contains('disabled')) return;
+        const guess = btn.getAttribute('data-name');
+        const ok = guess === quizAnswerName;
+        applyQuizVisualFeedback(btn);
+        els.quizFeedback.textContent = ok
+          ? t('quiz_correct')
+          : t('quiz_wrong', { name: quizAnswerName.replace(/-/g, ' ') });
+        let sc = 0;
+        try {
+          sc = parseInt(localStorage.getItem(LS_QUIZ_SCORE) || '0', 10) || 0;
+        } catch (e) {}
+        if (ok) {
+          sc += 1;
+          try {
+            localStorage.setItem(LS_QUIZ_SCORE, String(sc));
+          } catch (e) {}
+          bumpAchievement('quiz');
+        }
+      });
+    });
+  }
 
   async function loadCollectionSelectOptions(selectEl) {
     if (!selectEl) return;
-    selectEl.innerHTML = '<option value="">— Coleção —</option>';
+    selectEl.innerHTML = `<option value="">${escapeHtml(t('collection_option'))}</option>`;
     try {
       const j = await fetchJson(API_BASE + 'collections.php');
       const rows = j.data || [];
@@ -829,19 +994,19 @@
     } catch (e) {
       const opt = document.createElement('option');
       opt.value = '';
-      opt.textContent = 'Coleções indisponíveis';
+      opt.textContent = t('collections_unavailable');
       selectEl.appendChild(opt);
     }
   }
 
   async function refreshCollectionsPanel() {
     if (!els.collectionListEl) return;
-    els.collectionListEl.innerHTML = '<li class="list-group-item text-muted">Carregando…</li>';
+    els.collectionListEl.innerHTML = `<li class="list-group-item text-muted">${escapeHtml(t('loading'))}</li>`;
     try {
       const j = await fetchJson(API_BASE + 'collections.php');
       const rows = j.data || [];
       if (!rows.length) {
-        els.collectionListEl.innerHTML = '<li class="list-group-item small text-muted">Nenhuma coleção. Crie uma acima.</li>';
+        els.collectionListEl.innerHTML = `<li class="list-group-item small text-muted">${escapeHtml(t('collections_none'))}</li>`;
         return;
       }
       els.collectionListEl.innerHTML = rows
@@ -851,7 +1016,7 @@
           const c = r.item_count != null ? String(r.item_count) : '0';
           return `<li class="list-group-item d-flex justify-content-between align-items-center gap-2">
             <button type="button" class="btn btn-link btn-sm text-start p-0 js-open-collection" data-collection-id="${escapeHtml(id)}">${nome} <span class="text-muted">(${c})</span></button>
-            <button type="button" class="btn btn-sm btn-outline-danger js-del-collection" data-collection-id="${escapeHtml(id)}" title="Apagar coleção">×</button>
+            <button type="button" class="btn btn-sm btn-outline-danger js-del-collection" data-collection-id="${escapeHtml(id)}" title="${escapeHtml(t('collection_delete_title'))}">×</button>
           </li>`;
         })
         .join('');
@@ -861,30 +1026,30 @@
       els.collectionListEl.querySelectorAll('.js-del-collection').forEach((btn) => {
         btn.addEventListener('click', async () => {
           const id = parseInt(btn.getAttribute('data-collection-id'), 10);
-          if (!id || !confirm('Apagar esta coleção?')) return;
+          if (!id || !confirm(t('collection_delete_confirm'))) return;
           try {
             await fetchJson(API_BASE + 'collections.php?id=' + encodeURIComponent(String(id)), { method: 'DELETE' });
-            showToast('Coleção removida.');
+            showToast(t('collection_removed'));
             refreshCollectionsPanel();
             if (els.collectionItemsEl) els.collectionItemsEl.innerHTML = '';
           } catch (e) {
-            showToast(e.message || 'Erro', true);
+            showToast(e.message || t('error'), true);
           }
         });
       });
     } catch (e) {
-      els.collectionListEl.innerHTML = '<li class="list-group-item small text-danger">Sem base de dados ou tabelas em falta.</li>';
+      els.collectionListEl.innerHTML = `<li class="list-group-item small text-danger">${escapeHtml(t('collections_db_missing'))}</li>`;
     }
   }
 
   async function loadCollectionItems(collectionId) {
     if (!els.collectionItemsEl || !collectionId) return;
-    els.collectionItemsEl.innerHTML = '<li class="list-group-item text-muted">Carregando…</li>';
+    els.collectionItemsEl.innerHTML = `<li class="list-group-item text-muted">${escapeHtml(t('loading'))}</li>`;
     try {
       const j = await fetchJson(API_BASE + 'collections.php?items=' + encodeURIComponent(String(collectionId)));
       const rows = j.data || [];
       if (!rows.length) {
-        els.collectionItemsEl.innerHTML = '<li class="list-group-item small text-muted">Vazio.</li>';
+        els.collectionItemsEl.innerHTML = `<li class="list-group-item small text-muted">${escapeHtml(t('collection_items_empty'))}</li>`;
         return;
       }
       els.collectionItemsEl.innerHTML = rows
@@ -917,82 +1082,50 @@
             loadCollectionItems(cid);
             refreshCollectionsPanel();
           } catch (e) {
-            showToast(e.message || 'Erro', true);
+            showToast(e.message || t('error'), true);
           }
         });
       });
     } catch (e) {
-      els.collectionItemsEl.innerHTML = '<li class="list-group-item small text-danger">Erro ao carregar itens.</li>';
+      els.collectionItemsEl.innerHTML = `<li class="list-group-item small text-danger">${escapeHtml(t('collection_items_load_error'))}</li>`;
     }
+  }
+
+  function applyQuizVisualFeedback(selectedBtn) {
+    if (!els.quizChoices) return;
+    els.quizChoices.querySelectorAll('.answer-option').forEach((btn) => {
+      const name = btn.getAttribute('data-name');
+      const isCorrect = name === quizAnswerName;
+      const isSelected = btn === selectedBtn;
+      if (isCorrect) {
+        btn.classList.add('correct-answer');
+      } else {
+        btn.classList.add('wrong-answer');
+      }
+      if (isSelected) {
+        btn.classList.add('selected-answer');
+      }
+      btn.classList.add('disabled');
+      btn.setAttribute('aria-disabled', 'true');
+    });
   }
 
   async function startQuizRound() {
     if (!els.quizSilhouette || !els.quizChoices || !els.quizFeedback) return;
-    els.quizFeedback.textContent = 'A carregar…';
-    els.quizChoices.innerHTML = '';
-    const maxId = Math.max(1, state.total || 1025);
-    const correctId = Math.floor(Math.random() * maxId) + 1;
+    els.quizFeedback.textContent = t('quiz_loading');
+    quizShowChoiceSkeletons();
     try {
-      const j = await fetchJson(API_BASE + 'pokemon.php?id=' + encodeURIComponent(String(correctId)));
-      const p = j.data && j.data.pokemon ? j.data.pokemon : null;
-      if (!p) throw new Error('Sem dados');
-      quizAnswerName = p.name;
-      const art =
-        p.image ||
-        'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/' + p.id + '.png';
-      els.quizSilhouette.src = art;
-      els.quizSilhouette.alt = 'Silhueta';
-      const wrongIds = new Set();
-      let guard = 0;
-      while (wrongIds.size < 3 && guard < 40) {
-        guard += 1;
-        const w = Math.floor(Math.random() * maxId) + 1;
-        if (w !== correctId) wrongIds.add(w);
+      const pending = quizPrefetchPromise;
+      quizPrefetchPromise = null;
+      let round = pending ? await pending : await fetchQuizRoundData();
+      if (!round) {
+        round = await fetchQuizRoundData();
       }
-      const opts = [];
-      for (const wid of wrongIds) {
-        try {
-          const jw = await fetchJson(API_BASE + 'pokemon.php?id=' + encodeURIComponent(String(wid)));
-          const pw = jw.data && jw.data.pokemon ? jw.data.pokemon : null;
-          if (pw && pw.name) opts.push(String(pw.name));
-        } catch (e) {}
-      }
-      opts.push(String(p.name));
-      for (let i = opts.length - 1; i > 0; i--) {
-        const jx = Math.floor(Math.random() * (i + 1));
-        const t = opts[i];
-        opts[i] = opts[jx];
-        opts[jx] = t;
-      }
-      els.quizFeedback.textContent = 'Quem é este Pokémon?';
-      els.quizChoices.innerHTML = opts
-        .map(
-          (n) =>
-            `<button type="button" class="btn btn-outline-primary quiz-choice-btn text-capitalize" data-name="${escapeHtml(n)}">${escapeHtml(
-              n.replace(/-/g, ' ')
-            )}</button>`
-        )
-        .join('');
-      els.quizChoices.querySelectorAll('.quiz-choice-btn').forEach((btn) => {
-        btn.addEventListener('click', () => {
-          const guess = btn.getAttribute('data-name');
-          const ok = guess === quizAnswerName;
-          els.quizFeedback.textContent = ok ? 'Correcto!' : 'Errado — era ' + quizAnswerName.replace(/-/g, ' ');
-          let sc = 0;
-          try {
-            sc = parseInt(localStorage.getItem(LS_QUIZ_SCORE) || '0', 10) || 0;
-          } catch (e) {}
-          if (ok) {
-            sc += 1;
-            try {
-              localStorage.setItem(LS_QUIZ_SCORE, String(sc));
-            } catch (e) {}
-            bumpAchievement('quiz');
-          }
-        });
-      });
+      renderQuizRound(round);
+      prefetchNextQuizRound();
     } catch (e) {
-      els.quizFeedback.textContent = 'Não foi possível iniciar o quiz.';
+      els.quizFeedback.textContent = t('quiz_start_failed');
+      els.quizChoices.innerHTML = '';
     }
   }
 
@@ -1002,21 +1135,22 @@
       const s = state.searchResponse;
       const more =
         s.total > s.itemsShown
-          ? ` · mostrando ${s.itemsShown} de ${s.total} (limite da busca)`
+          ? t('search_more', { shown: s.itemsShown, total: s.total })
           : '';
-      els.listMeta.innerHTML = `<i class="bi bi-search" aria-hidden="true"></i> Busca “${escapeHtml(
-        String(s.query)
-      )}” · ${s.total} resultado(s)${more} · ${escapeHtml(String(s.scope_label))}`;
+      els.listMeta.innerHTML = `<i class="bi bi-search" aria-hidden="true"></i> ${escapeHtml(
+        t('search_meta', { query: String(s.query), total: s.total, more, scope: String(s.scope_label) })
+      )}`;
       return;
     }
     const d = data || state.lastListMeta || {};
     state.lastListMeta = d;
-    const regLabel = d.region_label ? String(d.region_label) : 'Pokédex Nacional';
-    const t = state.total > 0 ? `${state.total} Pokémon` : 'Lista';
+    const regLabel = d.region_label ? String(d.region_label) : t('national_dex');
+    const countLabel =
+      state.total > 0 ? t('catalog_pokemon_count', { total: state.total }) : t('list_page');
     const typeExtra = d.type_label ? ` · Tipo: ${escapeHtml(String(d.type_label))}` : '';
     els.listMeta.innerHTML = `<i class="bi bi-bookmarks-fill" aria-hidden="true"></i> Pág. ${state.page}/${
       state.totalPages
-    } · ${escapeHtml(regLabel)} · ${escapeHtml(t)}${typeExtra}`;
+    } · ${escapeHtml(regLabel)} · ${escapeHtml(countLabel)}${typeExtra}`;
   }
 
   function applyPaginationPageInput(pageInput, totalPages, currentPage) {
@@ -1109,7 +1243,7 @@
     els.paginationNav.innerHTML = `
       <div class="text-center py-1">
         <button type="button" class="btn btn-sm btn-outline-light rounded-pill" id="btnClearSearch">
-          <i class="bi bi-x-lg me-1" aria-hidden="true"></i>Limpar busca
+          <i class="bi bi-x-lg me-1" aria-hidden="true"></i>${escapeHtml(t('clear_search'))}
         </button>
       </div>`;
     const btn = document.getElementById('btnClearSearch');
@@ -1158,16 +1292,16 @@
         ? items.map(cardHtml).join('')
         : `<div class="col-12 py-5 text-center">
             <div class="fs-1 text-body-secondary mb-2" aria-hidden="true"><i class="bi bi-search"></i></div>
-            <p class="text-secondary mb-0 fw-medium">Nenhum Pokémon encontrado para esse termo.</p>
-            <p class="small text-muted mt-1 mb-0">Tente outro nome, ID ou limpe a busca.</p>
+            <p class="text-secondary mb-0 fw-medium">${escapeHtml(t('search_no_results'))}</p>
+            <p class="small text-muted mt-1 mb-0">${escapeHtml(t('search_try_other'))}</p>
           </div>`;
       updateListMeta();
       renderSearchToolbar();
-      announceCatalog(`Busca: ${items.length} resultado(s) para o termo atual.`);
+      announceCatalog(t('search_announce', { count: items.length }));
       window.scrollTo({ top: els.grid.offsetTop ? els.grid.offsetTop - 24 : 0, behavior: 'smooth' });
     } catch (e) {
       if (token === navToken) {
-        showToast(e.message || 'Falha na busca', true);
+        showToast(e.message || t('search_failed'), true);
       }
     } finally {
       if (token === navToken) {
@@ -1199,21 +1333,27 @@
         ? items.map(cardHtml).join('')
         : `<div class="col-12 py-5 text-center">
             <div class="fs-1 text-body-secondary mb-2" aria-hidden="true"><i class="bi bi-inbox"></i></div>
-            <p class="text-secondary mb-0 fw-medium">Nenhum Pokémon nesta página.</p>
-            <p class="small text-muted mt-1 mb-0">Tente outra página ou outro filtro de região.</p>
+            <p class="text-secondary mb-0 fw-medium">${escapeHtml(t('list_empty_page'))}</p>
+            <p class="small text-muted mt-1 mb-0">${escapeHtml(t('list_empty_hint'))}</p>
           </div>`;
 
       updateListMeta(d);
       renderPagination();
       announceCatalog(
-        `Página ${state.page} de ${state.totalPages}. ${items.length} Pokémon na grelha${state.total ? ` de ${state.total} no filtro` : ''}.`
+        t('list_announce', {
+          page: state.page,
+          totalPages: state.totalPages,
+          count: items.length,
+          totalHint: state.total ? t('list_total_hint', { total: state.total }) : '',
+        })
       );
       prefetchListAdjacent();
+      prefetchNextQuizRound();
       renderRegionProgress();
       window.scrollTo({ top: els.grid.offsetTop ? els.grid.offsetTop - 24 : 0, behavior: 'smooth' });
     } catch (e) {
       if (token === navToken) {
-        showToast(e.message || 'Falha ao carregar lista', true);
+        showToast(e.message || t('list_load_failed'), true);
       }
     } finally {
       if (token === navToken) {
@@ -1245,7 +1385,7 @@
       modal.show();
       refreshHistory();
     } catch (e) {
-      showToast(e.message || 'Pokémon não encontrado', true);
+      showToast(e.message || t('pokemon_not_found'), true);
     } finally {
       showLoader(false);
     }
@@ -1253,7 +1393,7 @@
 
   function renderEvolutionStages(stages) {
     if (!stages || !stages.length) {
-      return '<p class="text-muted small mb-0">Este Pokémon não possui evoluções registradas na cadeia padrão.</p>';
+      return `<p class="text-muted small mb-0">${escapeHtml(t('evolutions_none'))}</p>`;
     }
     const parts = [];
     for (let gi = 0; gi < stages.length; gi++) {
@@ -1293,7 +1433,7 @@
     const abilities = (p.abilities || [])
       .map((a) => {
         const label = typeof a === 'object' && a !== null ? a.label || a.slug || a.name || '' : String(a);
-        const hidden = a.is_hidden ? ' <span class="badge bg-secondary">Oculta</span>' : '';
+        const hidden = a.is_hidden ? ` <span class="badge bg-secondary">${escapeHtml(t('ability_hidden'))}</span>` : '';
         return `<li>${escapeHtml(String(label))}${hidden}</li>`;
       })
       .join('');
@@ -1308,7 +1448,7 @@
         p.flavor_language && !String(p.flavor_language).startsWith('pt')
           ? `<span class="text-muted small"> (texto da Pokédex: ${escapeHtml(String(p.flavor_language))})</span>`
           : '';
-      flavorHtml = `<h6 class="mt-3">Pokédex</h6><p class="small fst-italic border-start border-3 ps-2 mb-1">${escapeHtml(
+      flavorHtml = `<h6 class="mt-3">${escapeHtml(t('pokedex_heading'))}</h6><p class="small fst-italic border-start border-3 ps-2 mb-1">${escapeHtml(
         p.flavor_text
       )}</p>${langNote}`;
     }
@@ -1321,7 +1461,7 @@
       .join('');
     const statsHtml =
       statsRows !== ''
-        ? `<h6 class="mt-3">Status base</h6><div class="table-responsive"><table class="table table-sm table-borderless mb-0"><tbody>${statsRows}</tbody></table></div>`
+        ? `<h6 class="mt-3">${escapeHtml(t('stats_heading'))}</h6><div class="table-responsive"><table class="table table-sm table-borderless mb-0"><tbody>${statsRows}</tbody></table></div>`
         : '';
 
     let triviaHtml = '';
@@ -1329,24 +1469,24 @@
     if (p.habitat_label) bits.push(`Habitat típico: <strong>${escapeHtml(String(p.habitat_label))}</strong>`);
     if (p.capture_rate != null && p.capture_rate !== '') bits.push(`Taxa de captura: <strong>${escapeHtml(String(p.capture_rate))}</strong> (255 = mais difícil)`);
     if (p.base_happiness != null && p.base_happiness !== '') bits.push(`Felicidade base: <strong>${escapeHtml(String(p.base_happiness))}</strong>`);
-    if (p.is_baby) bits.push('<span class="badge bg-info text-dark">Bebé</span>');
-    if (p.is_legendary) bits.push('<span class="badge bg-warning text-dark">Lendário</span>');
-    if (p.is_mythical) bits.push('<span class="badge bg-danger">Mítico</span>');
+    if (p.is_baby) bits.push(`<span class="badge bg-info text-dark">${escapeHtml(t('badge_baby'))}</span>`);
+    if (p.is_legendary) bits.push(`<span class="badge bg-warning text-dark">${escapeHtml(t('badge_legendary'))}</span>`);
+    if (p.is_mythical) bits.push(`<span class="badge bg-danger">${escapeHtml(t('badge_mythical'))}</span>`);
     if (bits.length) {
-      triviaHtml = `<h6 class="mt-3">Curiosidades</h6><p class="small trivia-box mb-0">${bits.join(' · ')}</p>`;
+      triviaHtml = `<h6 class="mt-3">${escapeHtml(t('trivia_heading'))}</h6><p class="small trivia-box mb-0">${bits.join(' · ')}</p>`;
     }
 
     let metaHtml = '';
     const meta = data.meta;
     if (meta && (meta.detail_cached_at != null || meta.detail_source)) {
-      const src = meta.detail_source === 'database' ? 'Cache na base de dados' : 'Obtidos agora (API)';
-      const t = meta.detail_cached_at != null ? escapeHtml(String(meta.detail_cached_at)) : '—';
-      metaHtml = `<p class="small text-muted mb-2 pokedex-meta-line" role="note"><i class="bi bi-info-circle me-1"></i>${src}. <time datetime="${t}">${t}</time> · <button type="button" class="btn btn-link btn-sm p-0 align-baseline" id="btnExportDetailJson">Exportar JSON</button></p>`;
+      const src = meta.detail_source === 'database' ? t('meta_cache_db') : t('meta_cache_api');
+      const cachedAt = meta.detail_cached_at != null ? escapeHtml(String(meta.detail_cached_at)) : t('empty_dash');
+      metaHtml = `<p class="small text-muted mb-2 pokedex-meta-line" role="note"><i class="bi bi-info-circle me-1"></i>${escapeHtml(src)}. <time datetime="${cachedAt}">${cachedAt}</time> · <button type="button" class="btn btn-link btn-sm p-0 align-baseline" id="btnExportDetailJson">${escapeHtml(t('export_json'))}</button></p>`;
     }
     const collectionBar = `<div class="detail-collection-bar d-flex flex-wrap gap-2 align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25">
-      <span class="small text-muted mb-0">Coleção</span>
-      <select id="detailCollectionSelect" class="form-select form-select-sm" style="max-width:14rem" aria-label="Escolher coleção"></select>
-      <button type="button" class="btn btn-sm btn-primary" id="btnDetailAddToCollection">Adicionar à coleção</button>
+      <span class="small text-muted mb-0">${escapeHtml(t('collection_label'))}</span>
+      <select id="detailCollectionSelect" class="form-select form-select-sm" style="max-width:14rem" aria-label="${escapeHtml(t('collection_select_aria'))}"></select>
+      <button type="button" class="btn btn-sm btn-primary" id="btnDetailAddToCollection">${escapeHtml(t('collection_add_btn'))}</button>
     </div>`;
 
     return `
@@ -1363,11 +1503,11 @@
           ${genusHtml}
           <p class="mb-2"><strong>Altura:</strong> ${h} m &nbsp;|&nbsp; <strong>Peso:</strong> ${w} kg</p>
           ${triviaHtml}
-          <h6 class="mt-3">Habilidades</h6>
+          <h6 class="mt-3">${escapeHtml(t('abilities'))}</h6>
           <ul class="mb-3">${abilities || '<li class="text-muted">—</li>'}</ul>
           ${statsHtml}
           ${flavorHtml}
-          <h6 class="mt-3">Evoluções</h6>
+          <h6 class="mt-3">${escapeHtml(t('evolutions'))}</h6>
           ${renderEvolutionStages(data.evolution_stages)}
         </div>
       </div>`;
@@ -1391,7 +1531,7 @@
         a.download = 'pokemon-' + pid + '.json';
         a.click();
         URL.revokeObjectURL(a.href);
-        showToast('Ficheiro JSON gerado.');
+        showToast(t('export_json_done'));
       });
     }
     const sel = els.modalBody.querySelector('#detailCollectionSelect');
@@ -1401,7 +1541,7 @@
       addB.addEventListener('click', async () => {
         const cid = parseInt(String(sel.value), 10);
         if (!cid || !currentDetail || !currentDetail.pokemon) {
-          showToast('Escolha uma coleção.', true);
+          showToast(t('collection_choose'), true);
           return;
         }
         const pid = parseInt(String(currentDetail.pokemon.id), 10);
@@ -1412,9 +1552,9 @@
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'add', collection_id: cid, pokemon_id: pid, nome }),
           });
-          showToast('Adicionado à coleção.');
+          showToast(t('collection_added'));
         } catch (e) {
-          showToast(e.message || 'Não foi possível adicionar', true);
+          showToast(e.message || t('collection_add_failed'), true);
         }
       });
     }
@@ -1467,7 +1607,7 @@
     try {
       const json = await fetchJson(API_BASE + 'regions.php');
       const rows = json.data || [];
-      sel.innerHTML = '<option value="">Todas — Pokédex Nacional</option>';
+      sel.innerHTML = `<option value="">${escapeHtml(t('all_national'))}</option>`;
       rows.forEach((r) => {
         const opt = document.createElement('option');
         opt.value = r.name;
@@ -1475,7 +1615,7 @@
         sel.appendChild(opt);
       });
     } catch (e) {
-      showToast(e.message || 'Não foi possível carregar regiões.', true);
+      showToast(e.message || t('regions_load_failed'), true);
     }
   }
 
@@ -1500,14 +1640,14 @@
       if (json.db === false) {
         state.favoritePokemonIds = new Set();
         els.favoritesList.innerHTML =
-          '<li class="list-group-item small text-muted">Configure o banco para favoritos.</li>';
+          `<li class="list-group-item small text-muted">${escapeHtml(t('configure_db_favorites_short'))}</li>`;
         syncFavoriteButtonIfModalOpen();
         return;
       }
       const rows = json.data || [];
       state.favoritePokemonIds = new Set(rows.map((r) => parseInt(String(r.pokemon_id), 10)));
       if (!rows.length) {
-        els.favoritesList.innerHTML = '<li class="list-group-item small text-muted">Nenhum favorito.</li>';
+        els.favoritesList.innerHTML = `<li class="list-group-item small text-muted">${escapeHtml(t('favorites_none'))}</li>`;
         syncFavoriteButtonIfModalOpen();
         return;
       }
@@ -1546,7 +1686,7 @@
       syncFavoriteButtonIfModalOpen();
     } catch (e) {
       els.favoritesList.innerHTML =
-        '<li class="list-group-item small text-danger">Erro ao carregar favoritos.</li>';
+        `<li class="list-group-item small text-danger">${escapeHtml(t('favorites_load_error'))}</li>`;
     }
   }
 
@@ -1562,12 +1702,12 @@
       const json = await fetchJson(API_BASE + 'history.php?limit=12');
       if (json.db === false) {
         els.historyList.innerHTML =
-          '<li class="list-group-item small text-muted">Histórico requer banco configurado.</li>';
+          `<li class="list-group-item small text-muted">${escapeHtml(t('history_db_required'))}</li>`;
         return;
       }
       const rows = json.data || [];
       if (!rows.length) {
-        els.historyList.innerHTML = '<li class="list-group-item small text-muted">Sem buscas ainda.</li>';
+        els.historyList.innerHTML = `<li class="list-group-item small text-muted">${escapeHtml(t('history_none'))}</li>`;
         return;
       }
       els.historyList.innerHTML = rows
@@ -1601,13 +1741,13 @@
     if (icon) {
       icon.className = isFav ? 'bi bi-heart-fill' : 'bi bi-heart';
     }
-    const label = isFav ? 'Remover dos favoritos' : 'Adicionar aos favoritos';
+    const label = isFav ? t('remove_favorite') : t('add_favorites');
     els.btnFav.setAttribute('title', label);
     els.btnFav.setAttribute('aria-label', label);
     els.btnFav.setAttribute('aria-pressed', isFav ? 'true' : 'false');
     const textSpan = els.btnFav.querySelector('.btn-favorite-label');
     if (textSpan) {
-      textSpan.textContent = isFav ? 'Remover' : 'Favoritar';
+      textSpan.textContent = isFav ? t('remove') : t('favorited');
     }
   }
 
@@ -1621,25 +1761,28 @@
         await fetchJson(API_BASE + 'favorites.php?pokemon_id=' + encodeURIComponent(String(pokemonId)), {
           method: 'DELETE',
         });
-        showToast('Removido dos favoritos.');
+        showToast(t('favorite_removed'));
       } else {
         await fetchJson(API_BASE + 'favorites.php', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ pokemon_id: pokemonId, nome: nome }),
         });
-        showToast('Adicionado aos favoritos!');
+        showToast(t('favorite_added'));
         playFavoriteBlip();
         bumpAchievement('favadd');
       }
       await refreshFavorites();
       updateFavoriteButton();
     } catch (e) {
-      showToast(e.message || 'Não foi possível atualizar favoritos', true);
+      showToast(e.message || t('favorites_update_failed'), true);
     }
   }
 
   async function init() {
+    if (typeof window.PokedexLangApply === 'function') {
+      window.PokedexLangApply();
+    }
     initThemeToggle();
     initSoundToggle();
     renderRecentList();
@@ -1691,7 +1834,7 @@
       els.btnCreateCollection.addEventListener('click', async () => {
         const nome = (els.newCollectionName && els.newCollectionName.value.trim()) || '';
         if (!nome) {
-          showToast('Indique um nome.', true);
+          showToast(t('inform_name'), true);
           return;
         }
         try {
@@ -1701,17 +1844,18 @@
             body: JSON.stringify({ action: 'create', nome }),
           });
           if (els.newCollectionName) els.newCollectionName.value = '';
-          showToast('Coleção criada.');
+          showToast(t('collection_created'));
           refreshCollectionsPanel();
           const id = j.data && j.data.id != null ? j.data.id : null;
           if (id) loadCollectionItems(parseInt(String(id), 10));
         } catch (e) {
-          showToast(e.message || 'Erro', true);
+          showToast(e.message || t('error'), true);
         }
       });
     }
     if (els.btnQuiz && quizModalBootstrap) {
       els.btnQuiz.addEventListener('click', () => {
+        if (!quizPrefetchPromise) prefetchNextQuizRound();
         startQuizRound();
         quizModalBootstrap.show();
       });
@@ -1729,7 +1873,7 @@
         localStorage.removeItem(LS_FONT_SCALE);
       } catch (e) {}
       document.documentElement.style.setProperty('--pk-font-scale', '1');
-      showToast('Texto no tamanho padrão.');
+      showToast(t('font_default'));
     });
     if (els.btnToggleHc) els.btnToggleHc.addEventListener('click', () => toggleHighContrast());
     if (els.btnApplyFilters) {
@@ -1757,9 +1901,9 @@
       els.btnSharePokemon.addEventListener('click', async () => {
         try {
           await navigator.clipboard.writeText(window.location.href);
-          showToast('Link copiado para a área de transferência.');
+          showToast(t('link_copied'));
         } catch (e) {
-          showToast('Não foi possível copiar o link.', true);
+          showToast(t('link_copy_failed'), true);
         }
       });
     }
@@ -1782,7 +1926,7 @@
         try {
           await importFavoritesFromFile(f);
         } catch (e) {
-          showToast(e.message || 'Importação inválida', true);
+          showToast(e.message || t('import_invalid'), true);
         }
       });
     }
