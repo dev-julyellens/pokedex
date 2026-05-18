@@ -169,7 +169,7 @@ class PokemonModel
         }
         catch (Throwable $e)
         {
-            throw new RuntimeException('Não foi possível carregar o tipo.', 0, $e);
+            throw new RuntimeException(Lang::get('load_type_failed'), 0, $e);
         }
 
         $allItems = [];
@@ -433,7 +433,7 @@ class PokemonModel
         }
         catch (Throwable $e)
         {
-            throw new RuntimeException('Não foi possível carregar a região.', 0, $e);
+            throw new RuntimeException(Lang::get('load_region_failed'), 0, $e);
         }
 
         if ($idMin !== null || $idMax !== null)
@@ -528,7 +528,7 @@ class PokemonModel
             }
             catch (Throwable $e)
             {
-                throw new RuntimeException('Não foi possível carregar a região.', 0, $e);
+                throw new RuntimeException(Lang::get('load_region_failed'), 0, $e);
             }
 
             $candidates = [];
@@ -545,7 +545,7 @@ class PokemonModel
         else
         {
             $scope = 'national';
-            $scopeLabel = 'Pokédex Nacional';
+            $scopeLabel = Lang::get('national_dex');
             $candidates = [];
             $store = $this->pokemonStore();
             $fromDb = false;
@@ -696,7 +696,7 @@ class PokemonModel
         $refs = $region['pokedexes'] ?? [];
         if (!is_array($refs) || $refs === [])
         {
-            throw new InvalidArgumentException('Região sem Pokédex regional.');
+            throw new InvalidArgumentException(Lang::get('region_no_pokedex'));
         }
 
         $seen = [];
@@ -746,7 +746,7 @@ class PokemonModel
 
         if ($ordered === [])
         {
-            throw new InvalidArgumentException('Nenhuma entrada de Pokédex para esta região.');
+            throw new InvalidArgumentException(Lang::get('region_no_entries'));
         }
 
         return $ordered;
@@ -799,7 +799,7 @@ class PokemonModel
         }
         catch (Throwable $e)
         {
-            throw new RuntimeException('Não foi possível carregar o Pokémon.', 0, $e);
+            throw new RuntimeException(Lang::get('load_pokemon_failed'), 0, $e);
         }
 
         $detailId = (int) ($pokemon['id'] ?? 0);
