@@ -1,5 +1,5 @@
 /**
- * Design tokens — Pokédex UI (semânticos + legado pk-*)
+ * Design tokens - Pokédex UI (semânticos + legado pk-*)
  */
 :root {
   /* Brand */
@@ -11,7 +11,7 @@
   --pk-yellow: #ffd60a;
   --pk-yellow-soft: rgba(255, 214, 10, 0.25);
 
-  /* Semânticos — tema claro (padrão) */
+  /* Semânticos - tema claro (padrão) */
   --text-primary: #0f172a;
   --text-secondary: #334155;
   --text-muted: #64748b;

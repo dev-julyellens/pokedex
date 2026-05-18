@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Model — regiões (endpoint /region da PokeAPI).
+ * Model - regiões (endpoint /region da PokeAPI).
  */
 
 declare(strict_types=1);

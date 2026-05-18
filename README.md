@@ -7,7 +7,7 @@ Aplicação web para explorar Pokémon usando a [PokeAPI](https://pokeapi.co/), 
 | Camada | Pasta | Papel |
 |--------|--------|--------|
 | **Model** | `models/` | `PokemonModel` (lista nacional, por **região** ou por **tipo** na nacional, detalhe + evoluções), `PokemonStorageModel` (intervalos da lista nacional e payload JSON de detalhe), `RegionModel`, `FavoriteModel`, `CollectionModel`, `SearchHistoryModel` (PDO). |
-| **View** | `views/` | `JsonView` — resposta JSON padronizada (`success` / `error`). |
+| **View** | `views/` | `JsonView` - resposta JSON padronizada (`success` / `error`). |
 | **Controller** | `controllers/` | `PokemonController` (lista, detalhe, busca), `RegionController`, `FavoriteController`, `CollectionController`, `HistoryController`. |
 | **Services** | `services/` | `PokeApiService`, `CacheService`, `DatabaseService`, `PokeLocalizedStrings`. |
 
@@ -19,11 +19,11 @@ A resposta de `api/pokemon.php` inclui **`meta.detail_source`** (`live` ou `data
 
 Busca global: `api/search.php` → `PokemonController::search()` → `PokemonModel::searchGlobal()` (índice completo em cache via `PokeApiService::getFullPokemonIndex()`, ou espécies regionais quando `region` é passado).
 
-Detalhe: `api/pokemon.php` → `PokemonModel::findDetail()` — tenta payload em `pokemon_detail` antes da API e grava após montar a resposta (se o banco estiver configurado).
+Detalhe: `api/pokemon.php` → `PokemonModel::findDetail()` - tenta payload em `pokemon_detail` antes da API e grava após montar a resposta (se o banco estiver configurado).
 
 ## Frontend
 
-- **`frontend/`** — `index.html`, `css/styles.css`, `js/app.js`. Consome só `api/` com `fetch` (sem framework SPA; **Bootstrap 5** para layout e componentes).
+- **`frontend/`** - `index.html`, `css/styles.css`, `js/app.js`. Consome só `api/` com `fetch` (sem framework SPA; **Bootstrap 5** para layout e componentes).
 - Na raiz do projeto, `index.html` redireciona para `frontend/`.
 - **PWA**: `manifest.webmanifest` e **`sw.js` na raiz do projeto** (registo com *scope* em `/pokedex/` quando a UI está em `/pokedex/frontend/`); cache *stale-while-revalidate* para `GET` em `/api/`.
 
@@ -31,12 +31,12 @@ Detalhe: `api/pokemon.php` → `PokemonModel::findDetail()` — tenta payload em
 
 - PHP 8+ com **pdo_mysql** ou **pdo_pgsql** (se usar banco), **curl** recomendado.
 - Apache (XAMPP) ou outro servidor estático + PHP para `api/`.
-- MySQL/MariaDB ou PostgreSQL para favoritos, histórico, **coleções** (`collections`, `collection_items`) e **tabelas de cache** (`pokemon`, `pokemon_cache_meta`, `pokemon_detail` — ver `sql/`).
+- MySQL/MariaDB ou PostgreSQL para favoritos, histórico, **coleções** (`collections`, `collection_items`) e **tabelas de cache** (`pokemon`, `pokemon_cache_meta`, `pokemon_detail` - ver `sql/`).
 
 ## Rodar no XAMPP (Windows)
 
 1. Coloque o projeto em `htdocs/pokedex` e ligue o Apache.
-2. Abra `http://localhost/pokedex/frontend/` (ou `http://localhost/pokedex/` — redireciona para `frontend/`).
+2. Abra `http://localhost/pokedex/frontend/` (ou `http://localhost/pokedex/` - redireciona para `frontend/`).
 3. **Configuração**: copie `config/config.sample.php` para `config/config.php` e ajuste **ou** crie `config/.env` a partir de `config/.env.example` com `POKEDEX_DB_DSN`, `POKEDEX_DB_USER`, `POKEDEX_DB_PASS` (o `config.php` carrega `config/.env` se existir e a variável ainda não estiver no ambiente).
 4. Opcional: importe `sql/mysql_schema.sql` ou `sql/postgres_schema.sql` (inclui `pokemon_detail` e coleções).
 5. Pasta `cache/` gravável.
@@ -89,7 +89,7 @@ Detalhe: `api/pokemon.php` → `PokemonModel::findDetail()` — tenta payload em
 - Textos da interface centralizados em `frontend/assets/lang/pt-BR.js` e mensagens da API em `lang/pt_BR.php`.
 - **Tipos**: rótulos em PT-BR no backend (`PokeLocalizedStrings::TYPE_PT`).
 - **Habilidades**: `names` da API (`pt-BR` → `pt` → `es` → …), mapa parcial de nomes BR comuns e *fallback*.
-- **Nome, categoria (gênero), texto da Pokédex e rótulos na evolução**: via `pokemon-species`; a API muitas vezes **não** inclui `pt-BR` — usa-se *fallback* (`es`, `en`, etc.) e o modal pode indicar o idioma do texto da Pokédex.
+- **Nome, categoria (gênero), texto da Pokédex e rótulos na evolução**: via `pokemon-species`; a API muitas vezes **não** inclui `pt-BR` - usa-se *fallback* (`es`, `en`, etc.) e o modal pode indicar o idioma do texto da Pokédex.
 - **Status base**: rótulos em PT-BR (`PS`, `Ataque`, …).
 
 ## Observações

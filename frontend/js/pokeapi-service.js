@@ -1,5 +1,5 @@
 /**
- * Cliente HTTP da API local — cache por idioma via PokedexTranslationCache.
+ * Cliente HTTP da API local - cache por idioma via PokedexTranslationCache.
  */
 (function (global) {
   'use strict';

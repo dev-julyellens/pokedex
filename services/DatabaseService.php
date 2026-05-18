@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Conexão PDO opcional — favoritos e histórico.
+ * Conexão PDO opcional - favoritos e histórico.
  */
 
 declare(strict_types=1);

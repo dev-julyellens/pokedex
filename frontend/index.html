@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#0a0a12" />
-    <title>Pokédex — PokeAPI</title>
+    <title>Pokédex - PokeAPI</title>
     <script>
       try {
         var th = localStorage.getItem('pokedex_theme');
@@ -12,6 +12,8 @@
       } catch (e) {
         document.documentElement.setAttribute('data-theme', 'dark');
       }
+      if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+      window.scrollTo(0, 0);
     </script>
     <link rel="icon" href="favicon.png" type="image/png" sizes="any" />
     <link rel="manifest" href="manifest.webmanifest" />
@@ -204,7 +206,7 @@
                 <h2 class="panel-title mb-2"><i class="bi bi-grid-3x3-gap-fill" aria-hidden="true"></i> Catálogo</h2>
                 <label for="regionFilter" class="form-label small fw-semibold text-secondary mb-1">Região</label>
                 <select id="regionFilter" class="form-select region-select" aria-label="Filtrar lista por região">
-                  <option value="">Todas — Pokédex Nacional</option>
+                  <option value="">Todas - Pokédex Nacional</option>
                 </select>
               </div>
               <div class="col-md-6 col-lg-4">
@@ -353,10 +355,10 @@
           </div>
           <div class="modal-body small">
             <ul class="mb-0">
-              <li><kbd>/</kbd> — focar a busca</li>
-              <li><kbd>Enter</kbd> na busca — abrir detalhe do termo</li>
-              <li><kbd>Esc</kbd> — fechar modais</li>
-              <li><kbd>Ctrl</kbd>+clique ou botão do meio no cartão — abrir detalhe em nova aba (URL com <code>?pokemon=</code>)</li>
+              <li><kbd>/</kbd> - focar a busca</li>
+              <li><kbd>Enter</kbd> na busca - abrir detalhe do termo</li>
+              <li><kbd>Esc</kbd> - fechar modais</li>
+              <li><kbd>Ctrl</kbd>+clique ou botão do meio no cartão - abrir detalhe em nova aba (URL com <code>?pokemon=</code>)</li>
             </ul>
           </div>
         </div>
@@ -422,7 +424,7 @@
         <div class="modal-content">
           <button type="button" class="btn-close modal-pokedex-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
           <div class="modal-header">
-            <h2 class="modal-title h5 mb-0" id="quizModalLabel">Quiz — quem é esse Pokémon?</h2>
+            <h2 class="modal-title h5 mb-0" id="quizModalLabel">Quiz - quem é esse Pokémon?</h2>
           </div>
           <div class="modal-body text-center">
             <div class="quiz-silhouette-wrap mx-auto mb-3">

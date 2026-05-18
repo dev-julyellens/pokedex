@@ -1,5 +1,5 @@
 /**
- * Sistema de temas — utilitários e overrides Bootstrap
+ * Sistema de temas - utilitários e overrides Bootstrap
  */
 
 html {
@@ -16,7 +16,7 @@ body,
   transition: var(--theme-transition);
 }
 
-/* ——— Utilitários de texto (preferir em vez de text-muted Bootstrap) ——— */
+/* --- Utilitários de texto (preferir em vez de text-muted Bootstrap) --- */
 .text-theme-primary {
   color: var(--text-primary);
 }
@@ -54,7 +54,7 @@ p.text-muted {
   color: var(--accent-primary);
 }
 
-/* ——— Modal detalhe ——— */
+/* --- Modal detalhe --- */
 .modal-pokedex .modal-body {
   color: var(--text-primary);
   background: linear-gradient(180deg, var(--surface-primary) 0%, var(--surface-secondary) 100%);
@@ -211,7 +211,7 @@ p.text-muted {
   border-color: var(--border-color);
 }
 
-/* Accordion habilidades — fundo do collapse */
+/* Accordion habilidades - fundo do collapse */
 .modal-pokedex .accordion-body {
   background: var(--surface-secondary);
   color: var(--text-secondary);

@@ -205,7 +205,7 @@
     }
     return (
       '<ul class="list-group list-group-flush">' +
-      (abilities || '<li class="list-group-item pk-empty-hint">—</li>') +
+      (abilities || '<li class="list-group-item pk-empty-hint">-</li>') +
       '</ul>' +
       evHtml +
       movesHtml

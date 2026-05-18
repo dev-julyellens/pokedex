@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Controller (MVC) — HTTP para Pokémon: lista paginada e detalhe.
+ * Controller (MVC) - HTTP para Pokémon: lista paginada e detalhe.
  */
 
 declare(strict_types=1);

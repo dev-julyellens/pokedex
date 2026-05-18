@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Exemplo de configuração — copie para config.php
+ * Exemplo de configuração - copie para config.php
  */
 
 declare(strict_types=1);

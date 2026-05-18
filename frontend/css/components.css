@@ -1,8 +1,8 @@
 /**
- * Componentes UI — header, grid, cards, sidebar, modals
+ * Componentes UI - header, grid, cards, sidebar, modals
  */
 
-/* ——— Header / Hero ——— */
+/* --- Header / Hero --- */
 .app-header {
   padding-top: 1rem;
   padding-bottom: 0.5rem;
@@ -219,7 +219,7 @@
   transform: scale(1.06);
 }
 
-/* ——— Layout principal ——— */
+/* --- Layout principal --- */
 .app-main {
   flex: 1;
 }
@@ -256,7 +256,7 @@
   margin-bottom: 0 !important;
 }
 
-/* ——— Painéis ——— */
+/* --- Painéis --- */
 .content-panel {
   background: var(--pk-glass);
   backdrop-filter: blur(16px);
@@ -302,7 +302,7 @@
   color: var(--pk-muted);
 }
 
-/* ——— Grid Pokémon ——— */
+/* --- Grid Pokémon --- */
 .catalog-grid-wrap {
   margin-top: 0.5rem;
 }
@@ -322,7 +322,7 @@
   animation: pk-fade-in 0.45s var(--pk-ease) both;
 }
 
-/* ——— Cards Pokémon ——— */
+/* --- Cards Pokémon --- */
 .pokemon-card {
   position: relative;
   border: 1px solid var(--pk-border) !important;
@@ -450,7 +450,7 @@
   background: linear-gradient(180deg, var(--card-bg-top, rgba(255, 255, 255, 0.06)) 0%, var(--card-bg-bottom, rgba(0, 0, 0, 0.2)) 100%);
 }
 
-/* ——— Sidebar widgets ——— */
+/* --- Sidebar widgets --- */
 .app-sidebar {
   display: flex;
   flex-direction: column;
@@ -577,7 +577,7 @@
   pointer-events: auto;
 }
 
-/* ——— Skeleton ——— */
+/* --- Skeleton --- */
 .pokemon-skeleton {
   border-radius: var(--pk-radius);
   overflow: hidden;
@@ -605,7 +605,7 @@
 .pokemon-skeleton .skeleton-num { width: 40%; }
 .pokemon-skeleton .skeleton-name { width: 70%; }
 
-/* ——— Modais ——— */
+/* --- Modais --- */
 .modal.fade .modal-dialog {
   transition: transform 0.35s var(--pk-ease);
 }
@@ -656,7 +656,7 @@
   opacity: 0.85;
 }
 
-/* ——— Paginação ——— */
+/* --- Paginação --- */
 .pagination-pokedex .page-link {
   border-radius: var(--pk-radius-sm) !important;
   font-weight: 600;
@@ -674,7 +674,7 @@
   transform: translateY(-1px);
 }
 
-/* ——— Loader & Toast ——— */
+/* --- Loader & Toast --- */
 #globalLoader {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -700,7 +700,7 @@
   box-shadow: var(--pk-shadow-lg);
 }
 
-/* ——— Footer ——— */
+/* --- Footer --- */
 .app-footer {
   margin-top: auto;
   padding: 1.5rem 0;
@@ -711,7 +711,7 @@
   backdrop-filter: blur(10px);
 }
 
-/* ——— Type badges global ——— */
+/* --- Type badges global --- */
 .type-badge {
   font-size: 0.72rem;
   font-weight: 700;
@@ -731,7 +731,7 @@
   color: var(--pk-blue-deep);
 }
 
-/* ——— Responsive ——— */
+/* --- Responsive --- */
 @media (max-width: 991.98px) {
   .app-layout,
   .app-main > .row.g-4 {

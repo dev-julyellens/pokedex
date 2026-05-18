@@ -1,7 +1,7 @@
 <?php
 
 /**
- * View em JSON — respostas padronizadas da API.
+ * View em JSON - respostas padronizadas da API.
  */
 
 declare(strict_types=1);

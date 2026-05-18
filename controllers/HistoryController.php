@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Controller (MVC) — histórico de buscas (GET).
+ * Controller (MVC) - histórico de buscas (GET).
  */
 
 declare(strict_types=1);

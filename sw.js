@@ -1,5 +1,5 @@
 /**
- * Service worker — cache stale-while-revalidate para GET em /api/ (mesma origem).
+ * Service worker - cache stale-while-revalidate para GET em /api/ (mesma origem).
  */
 const CACHE_NAME = 'pokedex-api-v1';
 

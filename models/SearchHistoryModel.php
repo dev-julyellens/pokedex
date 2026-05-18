@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Model — histórico de termos buscados.
+ * Model - histórico de termos buscados.
  */
 
 declare(strict_types=1);

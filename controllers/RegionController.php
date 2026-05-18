@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Controller (MVC) — lista de regiões para filtro.
+ * Controller (MVC) - lista de regiões para filtro.
  */
 
 declare(strict_types=1);

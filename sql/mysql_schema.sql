@@ -1,4 +1,4 @@
--- MySQL 8+ / MariaDB — Pokédex (favoritos e histórico)
+-- MySQL 8+ / MariaDB - Pokédex (favoritos e histórico)
 -- Crie o banco e importe: mysql -u root -p < mysql_schema.sql
 
 CREATE DATABASE IF NOT EXISTS pokedex

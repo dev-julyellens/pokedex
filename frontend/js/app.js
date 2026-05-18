@@ -1,8 +1,12 @@
 /**
- * Pokédex — JavaScript + Bootstrap + API PHP local
+ * Pokédex - JavaScript + Bootstrap + API PHP local
  */
 (function () {
   'use strict';
+
+  if ('scrollRestoration' in history) {
+    history.scrollRestoration = 'manual';
+  }
 
   const g = typeof window !== 'undefined' ? window : globalThis;
 
@@ -45,6 +49,21 @@
   let paginationInputDebounce = null;
   /** Invalida respostas antigas quando uma nova lista ou busca é disparada. */
   let navToken = 0;
+
+  function scrollToTop(instant) {
+    try {
+      window.scrollTo({ top: 0, left: 0, behavior: instant ? 'instant' : 'smooth' });
+    } catch (e) {
+      window.scrollTo(0, 0);
+    }
+  }
+
+  function scrollToCatalog() {
+    const grid = els.grid || document.getElementById('pokemonGrid');
+    if (!grid) return;
+    const top = grid.getBoundingClientRect().top + window.pageYOffset - 24;
+    window.scrollTo({ top: Math.max(0, top), left: 0, behavior: 'smooth' });
+  }
 
   const els = {
     grid: document.getElementById('pokemonGrid'),
@@ -503,7 +522,7 @@
     const ids = ['hp', 'attack', 'defense', 'special-attack', 'special-defense', 'speed'];
     const byId = (stats, id) => {
       const row = (stats || []).find((s) => s.id === id);
-      return row ? Number(row.base) : '—';
+      return row ? Number(row.base) : '-';
     };
     const na = escapeHtml(pA.name_display || pA.name);
     const nb = escapeHtml(pB.name_display || pB.name);
@@ -1222,7 +1241,7 @@
     n = Math.min(Math.max(1, n), totalPages);
     pageInput.value = String(n);
     if (n !== currentPage) {
-      loadListPage(n);
+      loadListPage(n, { scrollToGrid: true });
     }
   }
 
@@ -1269,7 +1288,7 @@
         const li = a.closest('.page-item');
         if (li && li.classList.contains('disabled')) return;
         const p = parseInt(a.getAttribute('data-nav-page'), 10);
-        if (p >= 1 && p <= totalPages) loadListPage(p);
+        if (p >= 1 && p <= totalPages) loadListPage(p, { scrollToGrid: true });
       });
     });
 
@@ -1320,7 +1339,8 @@
     await loadListPage(1);
   }
 
-  async function runGlobalSearch(rawQuery) {
+  async function runGlobalSearch(rawQuery, options) {
+    options = options || {};
     const q = (rawQuery || '').trim();
     if (!q) {
       await clearSearchAndReload();
@@ -1359,7 +1379,7 @@
       renderSearchToolbar();
       announceCatalog(t('search_announce', { count: items.length }));
       if (items.length && Card) Card.hydrateGrid(els.grid);
-      window.scrollTo({ top: els.grid.offsetTop ? els.grid.offsetTop - 24 : 0, behavior: 'smooth' });
+      if (options.scrollToGrid) scrollToCatalog();
     } catch (e) {
       if (token === navToken) {
         showToast(e.message || t('search_failed'), true);
@@ -1372,7 +1392,8 @@
     }
   }
 
-  async function loadListPage(page) {
+  async function loadListPage(page, options) {
+    options = options || {};
     const token = ++navToken;
     state.searchActive = false;
     state.searchResponse = null;
@@ -1412,7 +1433,7 @@
       prefetchNextQuizRound();
       renderRegionProgress();
       if (items.length && Card) Card.hydrateGrid(els.grid);
-      window.scrollTo({ top: els.grid.offsetTop ? els.grid.offsetTop - 24 : 0, behavior: 'smooth' });
+      if (options.scrollToGrid) scrollToCatalog();
     } catch (e) {
       if (token === navToken) {
         showToast(e.message || t('list_load_failed'), true);
@@ -1531,7 +1552,7 @@
         clearSearchAndReload();
         return;
       }
-      runGlobalSearch(raw);
+      runGlobalSearch(raw, { scrollToGrid: true });
     }, 420);
   }
 
@@ -1722,6 +1743,8 @@
   }
 
   async function init() {
+    scrollToTop(true);
+
     if (window.PokedexI18n && window.PokedexI18n.ready) {
       await window.PokedexI18n.ready;
     }
@@ -1763,9 +1786,9 @@
         renderRegionProgress();
         const raw = (els.search && els.search.value ? els.search.value : '').trim();
         if (raw.length >= 2 || /^\d+$/.test(raw)) {
-          runGlobalSearch(raw);
+          runGlobalSearch(raw, { scrollToGrid: true });
         } else {
-          loadListPage(1);
+          loadListPage(1, { scrollToGrid: true });
         }
       });
     }
@@ -1828,18 +1851,18 @@
     });
     if (els.btnToggleHc) els.btnToggleHc.addEventListener('click', () => toggleHighContrast());
     if (els.btnApplyFilters) {
-      els.btnApplyFilters.addEventListener('click', () => loadListPage(1));
+      els.btnApplyFilters.addEventListener('click', () => loadListPage(1, { scrollToGrid: true }));
     }
     if (els.btnResetFilters) {
       els.btnResetFilters.addEventListener('click', () => {
         if (els.filterIdMin) els.filterIdMin.value = '';
         if (els.filterIdMax) els.filterIdMax.value = '';
-        loadListPage(1);
+        loadListPage(1, { scrollToGrid: true });
       });
     }
     if (els.typeFilter) {
       els.typeFilter.addEventListener('change', () => {
-        loadListPage(1);
+        loadListPage(1, { scrollToGrid: true });
       });
     }
     if (els.btnFav) {
@@ -1885,6 +1908,7 @@
     await populateRegionFilter();
     syncTypeFilterEnabled();
     await loadListPage(1);
+    scrollToTop(true);
     refreshFavorites();
     refreshHistory();
 
@@ -1893,7 +1917,11 @@
       const qp = (u.searchParams.get('pokemon') || '').trim();
       if (qp) openPokemon(qp);
     } catch (e) {}
+
+    scrollToTop(true);
   }
+
+  window.addEventListener('load', () => scrollToTop(true), { once: true });
 
   document.addEventListener('DOMContentLoaded', init);
 })();

@@ -11,7 +11,7 @@
   loading_pokedex: 'Carregando sua Pokédex…',
   close: 'Fechar',
   error: 'Erro',
-  empty_dash: '—',
+  empty_dash: '-',
 
   // Som e tema
   sound_on: 'Som ativado',
@@ -79,11 +79,11 @@
   quiz_question: 'Quem é este Pokémon?',
   quiz_loading: 'Carregando…',
   quiz_correct: 'Correto!',
-  quiz_wrong: 'Errado — era {name}',
+  quiz_wrong: 'Errado - era {name}',
   quiz_start_failed: 'Não foi possível iniciar o quiz.',
 
   // Coleções
-  collection_option: '— Coleção —',
+  collection_option: '- Coleção -',
   collections_unavailable: 'Coleções indisponíveis',
   collections_none: 'Nenhuma coleção. Crie uma acima.',
   collection_delete_title: 'Excluir coleção',
@@ -154,7 +154,7 @@
 
   // Regiões e histórico
   regions_load_failed: 'Não foi possível carregar regiões.',
-  all_national: 'Todas — Pokédex Nacional',
+  all_national: 'Todas - Pokédex Nacional',
   history_db_required: 'Histórico requer banco de dados configurado.',
   history_none: 'Sem buscas ainda.',
 
@@ -230,7 +230,7 @@
   html_your_collections: 'Suas coleções',
   html_collection_items: 'Itens da coleção',
   html_collection_items_hint: 'Clique em uma coleção à esquerda.',
-  html_quiz_title: 'Quiz — quem é esse Pokémon?',
+  html_quiz_title: 'Quiz - quem é esse Pokémon?',
   html_quiz_next: 'Próxima',
   html_region_filter_aria: 'Filtrar lista por região',
   html_type_filter_aria: 'Filtrar por tipo (Pokédex Nacional)',

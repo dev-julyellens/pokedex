@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Model — persistência de favoritos.
+ * Model - persistência de favoritos.
  */
 
 declare(strict_types=1);
@@ -43,7 +43,7 @@ class FavoriteModel
         }
         catch (Throwable)
         {
-            /* sem tabela pokemon ou falha transitória — INSERT pode falhar na FK */
+            /* sem tabela pokemon ou falha transitória - INSERT pode falhar na FK */
         }
         $sql = 'INSERT INTO favorites (pokemon_id, nome, data_registro) VALUES (:pid, :nome, NOW())';
         try

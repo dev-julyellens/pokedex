@@ -1,4 +1,4 @@
--- PostgreSQL 14+ — Pokédex (favoritos e histórico)
+-- PostgreSQL 14+ - Pokédex (favoritos e histórico)
 -- 1) createdb -U postgres pokedex
 -- 2) psql -U postgres -d pokedex -f postgres_schema.sql
 

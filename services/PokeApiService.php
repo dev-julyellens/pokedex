@@ -133,7 +133,7 @@ class PokeApiService
     }
 
     /**
-     * Lista completa de Pokémon (nome + URL) — uma requisição, cacheada.
+     * Lista completa de Pokémon (nome + URL) - uma requisição, cacheada.
      * Usada pela busca global no backend.
      */
     public function getFullPokemonIndex(): array

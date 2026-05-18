@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Controller (MVC) — favoritos (GET/POST/DELETE).
+ * Controller (MVC) - favoritos (GET/POST/DELETE).
  */
 
 declare(strict_types=1);

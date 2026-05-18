@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Model — regras e montagem de dados de Pokémon (PokeAPI).
+ * Model - regras e montagem de dados de Pokémon (PokeAPI).
  */
 
 declare(strict_types=1);
@@ -52,7 +52,7 @@ class PokemonModel
         }
         catch (Throwable)
         {
-            /* tabela ausente ou erro transitório — segue só com API */
+            /* tabela ausente ou erro transitório - segue só com API */
         }
     }
 
@@ -164,7 +164,7 @@ class PokemonModel
      */
     public function findCardSummaries(array $ids): array
     {
-        $ids = array_values(array_unique(array_filter(array_map('intval', $ids), static fn (int $x): bool => $x > 0)));
+        $ids = array_values(array_unique(array_filter(array_map('intval', $ids), static fn(int $x): bool => $x > 0)));
         if ($ids === [])
         {
             return [];
@@ -249,7 +249,8 @@ class PokemonModel
     private function mapCardSummaryFromRich(array $p): array
     {
         $stats = $p['stats'] ?? [];
-        $pickStat = static function (string $key) use ($stats): int {
+        $pickStat = static function (string $key) use ($stats): int
+        {
             foreach ($stats as $s)
             {
                 if (is_array($s) && ($s['id'] ?? '') === $key)
@@ -297,7 +298,7 @@ class PokemonModel
     }
 
     /**
-     * Lista paginada por tipo (Pokédex Nacional apenas — endpoint /type/{slug}).
+     * Lista paginada por tipo (Pokédex Nacional apenas - endpoint /type/{slug}).
      *
      * @return array{items: list<array{id:int,name:string,image:string}>, page:int, per_page:int, total:int, total_pages:int, type:string, type_label:string}
      */
@@ -367,7 +368,8 @@ class PokemonModel
             $hi = $bound[1];
             $allItems = array_values(array_filter(
                 $allItems,
-                static function (array $it) use ($lo, $hi): bool {
+                static function (array $it) use ($lo, $hi): bool
+                {
                     $id = (int) ($it['id'] ?? 0);
 
                     return $id >= $lo && $id <= $hi;
@@ -610,7 +612,8 @@ class PokemonModel
             $hi = $bound[1];
             $species = array_values(array_filter(
                 $species,
-                static function (array $s) use ($lo, $hi): bool {
+                static function (array $s) use ($lo, $hi): bool
+                {
                     $sid = (int) ($s['species_id'] ?? 0);
 
                     return $sid >= $lo && $sid <= $hi;
@@ -1180,16 +1183,22 @@ class PokemonModel
         }
 
         $movesRaw = [];
-        foreach ($pokemon['moves'] ?? [] as $mv) {
-            if (!is_array($mv) || !isset($mv['move']['name'])) {
+        foreach ($pokemon['moves'] ?? [] as $mv)
+        {
+            if (!is_array($mv) || !isset($mv['move']['name']))
+            {
                 continue;
             }
             $mslug = strtolower((string) $mv['move']['name']);
             $url = (string) ($mv['move']['url'] ?? '');
-            if ($url !== '' && !isset($movesRaw[$mslug])) {
-                try {
+            if ($url !== '' && !isset($movesRaw[$mslug]))
+            {
+                try
+                {
                     $movesRaw[$mslug] = $this->api->fetchJson($url);
-                } catch (Throwable) {
+                }
+                catch (Throwable)
+                {
                 }
             }
         }
@@ -1254,10 +1263,13 @@ class PokemonModel
     private function mapPokemonRichFromSource(array $pokemon, ?array $species, array $abilitiesCache, array $movesCache = []): array
     {
         $rich = $this->mapPokemonRich($pokemon, $species);
-        if ($movesCache !== []) {
+        if ($movesCache !== [])
+        {
             $movesOut = [];
-            foreach ($rich['moves_sample'] ?? [] as $mv) {
-                if (!is_array($mv)) {
+            foreach ($rich['moves_sample'] ?? [] as $mv)
+            {
+                if (!is_array($mv))
+                {
                     continue;
                 }
                 $mslug = (string) ($mv['name'] ?? '');
@@ -1271,7 +1283,8 @@ class PokemonModel
                     'level' => (int) ($mv['level'] ?? 0),
                 ];
             }
-            if ($movesOut !== []) {
+            if ($movesOut !== [])
+            {
                 $rich['moves_sample'] = $movesOut;
             }
         }
@@ -1626,7 +1639,7 @@ class PokemonModel
             }
         }
 
-        $typeSlugs = array_map(static fn (array $t): string => (string) ($t['slug'] ?? ''), $typesOut);
+        $typeSlugs = array_map(static fn(array $t): string => (string) ($t['slug'] ?? ''), $typesOut);
         $matchups = TypeChart::defensiveMatchups($typeSlugs);
 
         $generation = $this->extractGeneration(is_array($species) ? $species : null);
@@ -1829,7 +1842,7 @@ class PokemonModel
             {
                 $moveData = TranslationCache::getOrFetch(
                     $moveUrl,
-                    fn (string $u): array => $this->api->fetchJson($u)
+                    fn(string $u): array => $this->api->fetchJson($u)
                 );
                 $label = PokeLocalizedStrings::pickLocalizedName($moveData['names'] ?? [], $moveSlug);
             }
@@ -1839,7 +1852,7 @@ class PokemonModel
             }
             $candidates[] = ['name' => $moveSlug, 'label' => $label, 'level' => $level];
         }
-        usort($candidates, static fn (array $a, array $b): int => $a['level'] <=> $b['level']);
+        usort($candidates, static fn(array $a, array $b): int => $a['level'] <=> $b['level']);
 
         return array_slice($candidates, 0, 8);
     }

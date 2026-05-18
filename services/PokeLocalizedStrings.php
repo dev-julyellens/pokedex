@@ -10,46 +10,136 @@ class PokeLocalizedStrings
     /** @var array<string, array<string, string>> */
     private const TYPE_LABELS = [
         'pt-BR' => [
-            'normal' => 'Normal', 'fighting' => 'Lutador', 'flying' => 'Voador', 'poison' => 'Venenoso',
-            'ground' => 'Terra', 'rock' => 'Pedra', 'bug' => 'Inseto', 'ghost' => 'Fantasma',
-            'steel' => 'Aço', 'fire' => 'Fogo', 'water' => 'Água', 'grass' => 'Planta',
-            'electric' => 'Elétrico', 'psychic' => 'Psíquico', 'ice' => 'Gelo', 'dragon' => 'Dragão',
-            'dark' => 'Noturno', 'fairy' => 'Fada', 'unknown' => '???', 'shadow' => 'Sombra',
+            'normal' => 'Normal',
+            'fighting' => 'Lutador',
+            'flying' => 'Voador',
+            'poison' => 'Venenoso',
+            'ground' => 'Terra',
+            'rock' => 'Pedra',
+            'bug' => 'Inseto',
+            'ghost' => 'Fantasma',
+            'steel' => 'Aço',
+            'fire' => 'Fogo',
+            'water' => 'Água',
+            'grass' => 'Planta',
+            'electric' => 'Elétrico',
+            'psychic' => 'Psíquico',
+            'ice' => 'Gelo',
+            'dragon' => 'Dragão',
+            'dark' => 'Noturno',
+            'fairy' => 'Fada',
+            'unknown' => '???',
+            'shadow' => 'Sombra',
         ],
         'en' => [
-            'normal' => 'Normal', 'fighting' => 'Fighting', 'flying' => 'Flying', 'poison' => 'Poison',
-            'ground' => 'Ground', 'rock' => 'Rock', 'bug' => 'Bug', 'ghost' => 'Ghost',
-            'steel' => 'Steel', 'fire' => 'Fire', 'water' => 'Water', 'grass' => 'Grass',
-            'electric' => 'Electric', 'psychic' => 'Psychic', 'ice' => 'Ice', 'dragon' => 'Dragon',
-            'dark' => 'Dark', 'fairy' => 'Fairy', 'unknown' => '???', 'shadow' => 'Shadow',
+            'normal' => 'Normal',
+            'fighting' => 'Fighting',
+            'flying' => 'Flying',
+            'poison' => 'Poison',
+            'ground' => 'Ground',
+            'rock' => 'Rock',
+            'bug' => 'Bug',
+            'ghost' => 'Ghost',
+            'steel' => 'Steel',
+            'fire' => 'Fire',
+            'water' => 'Water',
+            'grass' => 'Grass',
+            'electric' => 'Electric',
+            'psychic' => 'Psychic',
+            'ice' => 'Ice',
+            'dragon' => 'Dragon',
+            'dark' => 'Dark',
+            'fairy' => 'Fairy',
+            'unknown' => '???',
+            'shadow' => 'Shadow',
         ],
         'es' => [
-            'normal' => 'Normal', 'fighting' => 'Lucha', 'flying' => 'Volador', 'poison' => 'Veneno',
-            'ground' => 'Tierra', 'rock' => 'Roca', 'bug' => 'Bicho', 'ghost' => 'Fantasma',
-            'steel' => 'Acero', 'fire' => 'Fuego', 'water' => 'Agua', 'grass' => 'Planta',
-            'electric' => 'Eléctrico', 'psychic' => 'Psíquico', 'ice' => 'Hielo', 'dragon' => 'Dragón',
-            'dark' => 'Siniestro', 'fairy' => 'Hada', 'unknown' => '???', 'shadow' => 'Sombra',
+            'normal' => 'Normal',
+            'fighting' => 'Lucha',
+            'flying' => 'Volador',
+            'poison' => 'Veneno',
+            'ground' => 'Tierra',
+            'rock' => 'Roca',
+            'bug' => 'Bicho',
+            'ghost' => 'Fantasma',
+            'steel' => 'Acero',
+            'fire' => 'Fuego',
+            'water' => 'Agua',
+            'grass' => 'Planta',
+            'electric' => 'Eléctrico',
+            'psychic' => 'Psíquico',
+            'ice' => 'Hielo',
+            'dragon' => 'Dragón',
+            'dark' => 'Siniestro',
+            'fairy' => 'Hada',
+            'unknown' => '???',
+            'shadow' => 'Sombra',
         ],
         'ja' => [
-            'normal' => 'ノーマル', 'fighting' => 'かくとう', 'flying' => 'ひこう', 'poison' => 'どく',
-            'ground' => 'じめん', 'rock' => 'いわ', 'bug' => 'むし', 'ghost' => 'ゴースト',
-            'steel' => 'はがね', 'fire' => 'ほのお', 'water' => 'みず', 'grass' => 'くさ',
-            'electric' => 'でんき', 'psychic' => 'エスパー', 'ice' => 'こおり', 'dragon' => 'ドラゴン',
-            'dark' => 'あく', 'fairy' => 'フェアリー', 'unknown' => '???', 'shadow' => 'シャドウ',
+            'normal' => 'ノーマル',
+            'fighting' => 'かくとう',
+            'flying' => 'ひこう',
+            'poison' => 'どく',
+            'ground' => 'じめん',
+            'rock' => 'いわ',
+            'bug' => 'むし',
+            'ghost' => 'ゴースト',
+            'steel' => 'はがね',
+            'fire' => 'ほのお',
+            'water' => 'みず',
+            'grass' => 'くさ',
+            'electric' => 'でんき',
+            'psychic' => 'エスパー',
+            'ice' => 'こおり',
+            'dragon' => 'ドラゴン',
+            'dark' => 'あく',
+            'fairy' => 'フェアリー',
+            'unknown' => '???',
+            'shadow' => 'シャドウ',
         ],
         'ko' => [
-            'normal' => '노말', 'fighting' => '격투', 'flying' => '비행', 'poison' => '독',
-            'ground' => '땅', 'rock' => '바위', 'bug' => '벌레', 'ghost' => '고스트',
-            'steel' => '강철', 'fire' => '불꽃', 'water' => '물', 'grass' => '풀',
-            'electric' => '전기', 'psychic' => '에스퍼', 'ice' => '얼음', 'dragon' => '드래곤',
-            'dark' => '악', 'fairy' => '페어리', 'unknown' => '???', 'shadow' => '그림자',
+            'normal' => '노말',
+            'fighting' => '격투',
+            'flying' => '비행',
+            'poison' => '독',
+            'ground' => '땅',
+            'rock' => '바위',
+            'bug' => '벌레',
+            'ghost' => '고스트',
+            'steel' => '강철',
+            'fire' => '불꽃',
+            'water' => '물',
+            'grass' => '풀',
+            'electric' => '전기',
+            'psychic' => '에스퍼',
+            'ice' => '얼음',
+            'dragon' => '드래곤',
+            'dark' => '악',
+            'fairy' => '페어리',
+            'unknown' => '???',
+            'shadow' => '그림자',
         ],
         'zh-Hans' => [
-            'normal' => '一般', 'fighting' => '格斗', 'flying' => '飞行', 'poison' => '毒',
-            'ground' => '地面', 'rock' => '岩石', 'bug' => '虫', 'ghost' => '幽灵',
-            'steel' => '钢', 'fire' => '火', 'water' => '水', 'grass' => '草',
-            'electric' => '电', 'psychic' => '超能力', 'ice' => '冰', 'dragon' => '龙',
-            'dark' => '恶', 'fairy' => '妖精', 'unknown' => '???', 'shadow' => '暗影',
+            'normal' => '一般',
+            'fighting' => '格斗',
+            'flying' => '飞行',
+            'poison' => '毒',
+            'ground' => '地面',
+            'rock' => '岩石',
+            'bug' => '虫',
+            'ghost' => '幽灵',
+            'steel' => '钢',
+            'fire' => '火',
+            'water' => '水',
+            'grass' => '草',
+            'electric' => '电',
+            'psychic' => '超能力',
+            'ice' => '冰',
+            'dragon' => '龙',
+            'dark' => '恶',
+            'fairy' => '妖精',
+            'unknown' => '???',
+            'shadow' => '暗影',
         ],
     ];
 
@@ -71,19 +161,24 @@ class PokeLocalizedStrings
      */
     public static function pickFlavorText(array $entries, string $slugFallback = ''): array
     {
-        foreach (self::languageChain() as $code) {
+        foreach (self::languageChain() as $code)
+        {
             $hit = self::matchFlavorRow($entries, $code);
-            if ($hit !== null) {
+            if ($hit !== null)
+            {
                 return $hit;
             }
         }
-        foreach ($entries as $row) {
-            if (!is_array($row)) {
+        foreach ($entries as $row)
+        {
+            if (!is_array($row))
+            {
                 continue;
             }
             $lang = (string) ($row['language']['name'] ?? '');
             $txt = isset($row['flavor_text']) ? (string) $row['flavor_text'] : '';
-            if ($txt !== '') {
+            if ($txt !== '')
+            {
                 return self::formatFlavorRow($txt, $lang);
             }
         }
@@ -94,31 +189,40 @@ class PokeLocalizedStrings
     /** @param list<array<string,mixed>> $entries */
     public static function pickAbilityEffect(array $entries, string $slugFallback = ''): string
     {
-        foreach (self::languageChain() as $code) {
-            foreach ($entries as $row) {
-                if (!is_array($row) || ($row['language']['name'] ?? '') !== $code) {
+        foreach (self::languageChain() as $code)
+        {
+            foreach ($entries as $row)
+            {
+                if (!is_array($row) || ($row['language']['name'] ?? '') !== $code)
+                {
                     continue;
                 }
                 $short = isset($row['short_effect']) ? trim((string) $row['short_effect']) : '';
-                if ($short !== '') {
+                if ($short !== '')
+                {
                     return self::normalizeSpaces($short);
                 }
                 $effect = isset($row['effect']) ? trim((string) $row['effect']) : '';
-                if ($effect !== '') {
+                if ($effect !== '')
+                {
                     return self::normalizeSpaces($effect);
                 }
             }
         }
-        foreach ($entries as $row) {
-            if (!is_array($row)) {
+        foreach ($entries as $row)
+        {
+            if (!is_array($row))
+            {
                 continue;
             }
             $short = isset($row['short_effect']) ? trim((string) $row['short_effect']) : '';
-            if ($short !== '') {
+            if ($short !== '')
+            {
                 return self::normalizeSpaces($short);
             }
             $effect = isset($row['effect']) ? trim((string) $row['effect']) : '';
-            if ($effect !== '') {
+            if ($effect !== '')
+            {
                 return self::normalizeSpaces($effect);
             }
         }
@@ -155,7 +259,8 @@ class PokeLocalizedStrings
     public static function abilityLabel(string $slug, string $apiFallbackName = ''): string
     {
         $fromApi = trim($apiFallbackName);
-        if ($fromApi !== '') {
+        if ($fromApi !== '')
+        {
             return $fromApi;
         }
 
@@ -171,7 +276,8 @@ class PokeLocalizedStrings
     {
         $slug = is_array($habitatRef) ? strtolower(trim((string) ($habitatRef['name'] ?? $slugFallback))) : $slugFallback;
         $url = is_array($habitatRef) ? trim((string) ($habitatRef['url'] ?? '')) : '';
-        if ($url !== '') {
+        if ($url !== '')
+        {
             $data = TranslationCache::getOrFetch($url);
 
             return self::pickLocalizedName($data['names'] ?? [], $slug);
@@ -185,15 +291,18 @@ class PokeLocalizedStrings
      */
     public static function resourceLabel(?array $resourceRef, string $slugFallback = ''): string
     {
-        if (!is_array($resourceRef)) {
+        if (!is_array($resourceRef))
+        {
             return self::fallbackSlug($slugFallback);
         }
         $slug = strtolower(trim((string) ($resourceRef['name'] ?? $slugFallback)));
         $url = trim((string) ($resourceRef['url'] ?? ''));
-        if ($url !== '') {
+        if ($url !== '')
+        {
             $data = TranslationCache::getOrFetch($url);
             $picked = self::pickLocalizedName($data['names'] ?? [], $slug);
-            if ($picked !== '' && $picked !== self::fallbackSlug('')) {
+            if ($picked !== '' && $picked !== self::fallbackSlug(''))
+            {
                 return $picked;
             }
         }
@@ -206,26 +315,34 @@ class PokeLocalizedStrings
      */
     private static function pickByLanguage(array $rows, string $field, string $slugFallback = ''): string
     {
-        foreach (self::languageChain() as $code) {
-            foreach ($rows as $row) {
-                if (!is_array($row)) {
+        foreach (self::languageChain() as $code)
+        {
+            foreach ($rows as $row)
+            {
+                if (!is_array($row))
+                {
                     continue;
                 }
-                if (($row['language']['name'] ?? '') !== $code) {
+                if (($row['language']['name'] ?? '') !== $code)
+                {
                     continue;
                 }
                 $val = isset($row[$field]) ? trim((string) $row[$field]) : '';
-                if ($val !== '') {
+                if ($val !== '')
+                {
                     return $val;
                 }
             }
         }
-        foreach ($rows as $row) {
-            if (!is_array($row)) {
+        foreach ($rows as $row)
+        {
+            if (!is_array($row))
+            {
                 continue;
             }
             $val = isset($row[$field]) ? trim((string) $row[$field]) : '';
-            if ($val !== '') {
+            if ($val !== '')
+            {
                 return $val;
             }
         }
@@ -239,15 +356,19 @@ class PokeLocalizedStrings
      */
     private static function matchFlavorRow(array $entries, string $code): ?array
     {
-        foreach ($entries as $row) {
-            if (!is_array($row)) {
+        foreach ($entries as $row)
+        {
+            if (!is_array($row))
+            {
                 continue;
             }
-            if (($row['language']['name'] ?? '') !== $code) {
+            if (($row['language']['name'] ?? '') !== $code)
+            {
                 continue;
             }
             $txt = isset($row['flavor_text']) ? (string) $row['flavor_text'] : '';
-            if ($txt !== '') {
+            if ($txt !== '')
+            {
                 return self::formatFlavorRow($txt, $code);
             }
         }
@@ -278,8 +399,9 @@ class PokeLocalizedStrings
     private static function fallbackSlug(string $slug): string
     {
         $s = strtolower(trim($slug));
-        if ($s === '') {
-            return '—';
+        if ($s === '')
+        {
+            return '-';
         }
 
         return ucfirst(str_replace('-', ' ', $s));

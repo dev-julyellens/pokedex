@@ -1,4 +1,4 @@
-/* ——— Modal / drawer detalhe ——— */
+/* --- Modal / drawer detalhe --- */
 .modal-pokedex.modal .modal-dialog {
   max-width: min(920px, 96vw);
 }
