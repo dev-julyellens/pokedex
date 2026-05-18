@@ -1,0 +1,101 @@
+/**
+ * Tema base — light & dark
+ */
+.app-body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  font-family: var(--pk-font);
+  font-size: calc(1rem * var(--pk-font-scale, 1));
+  line-height: var(--pk-line-height);
+  color: var(--pk-ink);
+  background-color: var(--pk-bg);
+  background-image:
+    radial-gradient(ellipse 100% 60% at 50% -10%, rgba(255, 71, 87, 0.08), transparent 50%),
+    radial-gradient(ellipse 70% 50% at 100% 20%, rgba(76, 201, 240, 0.06), transparent 45%),
+    radial-gradient(ellipse 50% 40% at 0% 90%, rgba(67, 97, 238, 0.05), transparent 50%);
+  background-attachment: fixed;
+}
+
+[data-theme='dark'] .app-body {
+  background-image:
+    radial-gradient(ellipse 100% 70% at 50% -15%, rgba(255, 71, 87, 0.14), transparent 55%),
+    radial-gradient(ellipse 80% 50% at 100% 30%, rgba(67, 97, 238, 0.12), transparent 50%),
+    radial-gradient(ellipse 60% 45% at 0% 80%, rgba(76, 201, 240, 0.08), transparent 50%);
+}
+
+/* Fundo animado sutil */
+.app-bg-fx {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.app-bg-fx::before,
+.app-bg-fx::after {
+  content: "";
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  animation: pk-bg-drift 18s ease-in-out infinite;
+  opacity: 0.35;
+}
+
+.app-bg-fx::before {
+  width: min(480px, 70vw);
+  height: min(480px, 70vw);
+  top: -10%;
+  right: -5%;
+  background: radial-gradient(circle, var(--pk-red-glow), transparent 70%);
+}
+
+.app-bg-fx::after {
+  width: min(400px, 60vw);
+  height: min(400px, 60vw);
+  bottom: 5%;
+  left: -8%;
+  background: radial-gradient(circle, rgba(76, 201, 240, 0.35), transparent 70%);
+  animation-delay: -9s;
+}
+
+.app-shell {
+  position: relative;
+  z-index: 1;
+}
+
+.container.app-container {
+  max-width: var(--pk-container);
+}
+
+/* Forms global */
+.form-control,
+.form-select {
+  border-radius: var(--pk-radius-sm);
+  border-color: var(--pk-border);
+  background: var(--pk-surface-solid);
+  color: var(--pk-ink);
+  transition: border-color var(--pk-duration-fast), box-shadow var(--pk-duration-fast);
+}
+
+.form-control:focus,
+.form-select:focus {
+  border-color: rgba(255, 71, 87, 0.45);
+  box-shadow: 0 0 0 3px rgba(255, 71, 87, 0.15);
+}
+
+[data-theme='dark'] .form-control,
+[data-theme='dark'] .form-select {
+  background-color: rgba(30, 30, 44, 0.9);
+  border-color: rgba(255, 255, 255, 0.1);
+  color: var(--pk-ink);
+}
+
+[data-theme='dark'] .text-body-secondary {
+  color: var(--pk-ink-soft) !important;
+}
+
+[data-theme='dark'] .text-body {
+  color: var(--pk-ink) !important;
+}

@@ -1,0 +1,85 @@
+/**
+ * Animações globais
+ */
+@keyframes pk-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pk-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes pk-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes pk-glow-pulse {
+  0%,
+  100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.75;
+  }
+}
+
+@keyframes pk-modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes pk-spin-glow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pk-bg-drift {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(2%, -1%) scale(1.02);
+  }
+}
+
+.pk-animate-in {
+  animation: pk-fade-in 0.5s var(--pk-ease) both;
+}
+
+.pk-stagger > * {
+  animation: pk-fade-in 0.45s var(--pk-ease) both;
+}
+
+.pk-stagger > *:nth-child(1) { animation-delay: 0.02s; }
+.pk-stagger > *:nth-child(2) { animation-delay: 0.04s; }
+.pk-stagger > *:nth-child(3) { animation-delay: 0.06s; }
+.pk-stagger > *:nth-child(4) { animation-delay: 0.08s; }
+.pk-stagger > *:nth-child(5) { animation-delay: 0.1s; }
+.pk-stagger > *:nth-child(6) { animation-delay: 0.12s; }
+.pk-stagger > *:nth-child(n + 7) { animation-delay: 0.14s; }
