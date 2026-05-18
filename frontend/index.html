@@ -3,19 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#e63946" />
+    <meta name="theme-color" content="#0a0a12" />
     <title>Pokédex — PokeAPI</title>
     <script>
       try {
-        if (localStorage.getItem('pokedex_theme') === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
-      } catch (e) {}
+        var th = localStorage.getItem('pokedex_theme');
+        if (th !== 'light') document.documentElement.setAttribute('data-theme', 'dark');
+      } catch (e) {
+        document.documentElement.setAttribute('data-theme', 'dark');
+      }
     </script>
     <link rel="icon" href="favicon.png" type="image/png" sizes="any" />
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;1,14..32,400&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap"
       rel="stylesheet"
     />
     <link
@@ -28,6 +31,7 @@
     <link rel="stylesheet" href="css/styles.css" />
   </head>
   <body class="app-body">
+    <div class="app-bg-fx" aria-hidden="true"></div>
     <div
       id="globalLoader"
       class="position-fixed top-0 start-0 w-100 h-100 d-none align-items-center justify-content-center"
@@ -51,7 +55,8 @@
       </div>
     </div>
 
-    <header class="container pt-3 pb-0">
+    <div class="app-shell">
+    <header class="container app-container app-header">
       <div class="pokedex-hero">
         <div class="row align-items-stretch g-4 position-relative" style="z-index: 1">
           <div class="col-lg-7">
@@ -67,16 +72,18 @@
           </div>
           <div class="col-lg-5 d-flex flex-column justify-content-end">
             <label for="searchInput" class="form-label mb-1"><i class="bi bi-search me-1"></i>Buscar Pokémon</label>
-            <div class="input-group input-group-lg">
-              <input
-                type="search"
-                id="searchInput"
-                class="form-control"
-                placeholder="Nome ou número (ex: pikachu, 25)"
-                autocomplete="off"
-                aria-describedby="searchHelp"
-              />
-              <span class="input-group-text"><i class="bi bi-search" aria-hidden="true"></i></span>
+            <div class="search-wrap">
+              <div class="input-group input-group-lg search-input-group">
+                <input
+                  type="search"
+                  id="searchInput"
+                  class="form-control"
+                  placeholder="Nome ou número (ex: pikachu, 25)"
+                  autocomplete="off"
+                  aria-describedby="searchHelp"
+                />
+                <span class="input-group-text"><i class="bi bi-search" aria-hidden="true"></i></span>
+              </div>
             </div>
             <p id="searchHelp" class="form-text text-white-50 mb-0 mt-2">
               <i class="bi bi-globe2 me-1"></i>Busca em toda a Pokédex (ou só na região selecionada) ·
@@ -127,9 +134,9 @@
       </div>
     </header>
 
-    <main class="container app-main pb-4">
+    <main class="container app-container app-main pb-4">
       <div class="row g-4">
-        <div class="col-lg-3 order-lg-2">
+        <aside class="app-sidebar col-lg-3 order-lg-2" id="appSidebar" aria-label="Painel lateral">
           <div class="sidebar-panel mb-3">
             <h2 class="sidebar-head h6"><i class="bi bi-heart-fill" aria-hidden="true"></i> Favoritos</h2>
             <ul class="list-group list-group-flush" id="favoritesList">
@@ -148,9 +155,14 @@
               <li class="list-group-item py-2 text-muted">Carregando…</li>
             </ul>
           </div>
-          <div class="sidebar-panel mb-3">
+          <div class="sidebar-panel sidebar-widget-progress mb-3">
             <h2 class="sidebar-head h6"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i> Progresso</h2>
-            <p class="small mb-0 px-3 py-2 text-muted" id="regionProgress">Abra detalhes de Pokémon para contar o progresso nesta vista.</p>
+            <div class="sidebar-widget-progress-body px-3 pb-3">
+              <p class="small mb-0 text-muted" id="regionProgress">Abra detalhes de Pokémon para contar o progresso nesta visualização.</p>
+              <div class="progress mt-2" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="regionProgressBar">
+                <div class="progress-bar" id="regionProgressBarFill" style="width: 0%"></div>
+              </div>
+            </div>
           </div>
           <div class="sidebar-panel sidebar-panel-history p-0 overflow-hidden">
             <div class="accordion accordion-flush sidebar-history-accordion" id="historyAccordion">
@@ -184,8 +196,8 @@
               </div>
             </div>
           </div>
-        </div>
-        <div class="col-lg-9 order-lg-1">
+        </aside>
+        <div class="col-lg-9 order-lg-1 app-catalog">
           <div class="content-panel">
             <div class="row g-3 align-items-end mb-3">
               <div class="col-md-6 col-lg-4">
@@ -257,7 +269,7 @@
             </div>
             <div id="catalogLiveRegion" class="visually-hidden" aria-live="polite" aria-atomic="true"></div>
             <div id="catalogGridWrap" class="catalog-grid-wrap">
-              <div id="pokemonGrid" class="row row-cols-2 row-cols-md-5 g-3"></div>
+              <div id="pokemonGrid" class="pokemon-grid pk-stagger"></div>
             </div>
             <nav id="paginationNav" class="mt-4 pt-2 border-top" style="border-color: var(--pk-border) !important" aria-label="Paginação da lista"></nav>
           </div>
@@ -265,12 +277,19 @@
       </div>
     </main>
 
+    <div class="sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
+    <button type="button" class="btn-sidebar-toggle" id="btnSidebarToggle" aria-label="Abrir painel lateral" aria-expanded="false">
+      <i class="bi bi-layout-sidebar-inset-reverse" aria-hidden="true"></i>
+    </button>
+
     <footer class="app-footer text-center">
-      <div class="container small">
+      <div class="container app-container small">
         <span class="text-body-secondary">Pokédex educacional · Dados</span>
         <a href="https://pokeapi.co/" class="link-secondary text-decoration-none" target="_blank" rel="noopener">PokeAPI</a>
       </div>
     </footer>
+
+    </div>
 
     <div class="modal fade modal-pokedex" id="pokemonModal" tabindex="-1" aria-labelledby="pokemonModalLabel" aria-hidden="true">
       <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
