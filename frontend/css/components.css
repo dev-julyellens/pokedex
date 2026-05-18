@@ -6,11 +6,14 @@
 .app-header {
   padding-top: 1rem;
   padding-bottom: 0.5rem;
+  overflow: visible;
+  position: relative;
+  z-index: 100;
 }
 
 .pokedex-hero {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   color: #fff;
   border-radius: var(--pk-radius-lg);
   padding: 2rem 2rem 1.75rem;
@@ -34,6 +37,7 @@
   opacity: 0.2;
   pointer-events: none;
   animation: pk-glow-pulse 4s ease-in-out infinite;
+  clip-path: inset(-35% -8% 0 0 round var(--pk-radius-lg));
 }
 
 .pokedex-hero::after {
@@ -42,11 +46,18 @@
   inset: 0;
   background: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='2' cy='2' r='1' fill='%23ffffff' fill-opacity='0.05'/%3E%3C/svg%3E");
   pointer-events: none;
+  border-radius: inherit;
+  clip-path: inset(0 round var(--pk-radius-lg));
 }
 
 .pokedex-hero > .row {
   position: relative;
   z-index: 1;
+}
+
+.pokedex-hero .col-lg-5,
+.pokedex-hero .hero-toolbar {
+  overflow: visible;
 }
 
 .hero-brand {
@@ -154,6 +165,13 @@
   border-top-color: rgba(255, 255, 255, 0.12) !important;
   padding-top: 1rem !important;
   margin-top: 1rem !important;
+  overflow: visible;
+  position: relative;
+}
+
+.lang-selector-host {
+  position: relative;
+  z-index: 2000;
 }
 
 .hero-toolbar .btn {
