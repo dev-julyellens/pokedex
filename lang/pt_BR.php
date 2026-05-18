@@ -1,0 +1,36 @@
+<?php
+
+/**
+ * Textos da API e mensagens exibidas ao usuário (pt-BR).
+ *
+ * @return array<string, string>
+ */
+return [
+    'db_not_configured' => 'Banco de dados não configurado.',
+    'invalid_json' => 'JSON inválido.',
+    'method_not_supported' => 'Método não suportado.',
+    'use_get' => 'Use GET.',
+    'inform_id_or_name' => 'Informe id ou name.',
+    'pokemon_not_found' => 'Pokémon não encontrado.',
+    'inform_search_term' => 'Informe um termo de busca (q).',
+    'search_min_length' => 'Use pelo menos 2 letras ou um ID numérico.',
+    'favorite_add_failed' => 'Não foi possível favoritar (duplicado ou inválido).',
+    'favorite_not_found' => 'Favorito não encontrado.',
+    'collection_create_failed' => 'Não foi possível criar a coleção.',
+    'collection_add_failed' => 'Não foi possível adicionar (duplicado ou coleção inválida).',
+    'invalid_action' => 'Ação inválida.',
+    'collection_item_not_found' => 'Item ou coleção não encontrado.',
+    'load_type_failed' => 'Não foi possível carregar o tipo.',
+    'load_region_failed' => 'Não foi possível carregar a região.',
+    'load_pokemon_failed' => 'Não foi possível carregar o Pokémon.',
+    'pdo_unavailable' => 'PDO indisponível.',
+    'pokeapi_invalid_response' => 'Resposta inválida da PokeAPI.',
+    'network_failure' => 'Falha de rede: {error}',
+    'resource_not_found' => 'Recurso não encontrado.',
+    'pokeapi_unavailable' => 'PokeAPI temporariamente indisponível (HTTP {code}).',
+    'pokeapi_http_error' => 'PokeAPI retornou HTTP {code}',
+    'pokeapi_fetch_failed' => 'Falha ao obter dados da PokeAPI.',
+    'region_no_pokedex' => 'Região sem Pokédex regional.',
+    'region_no_entries' => 'Nenhuma entrada de Pokédex para esta região.',
+    'national_dex' => 'Pokédex Nacional',
+];
