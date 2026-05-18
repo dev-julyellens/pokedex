@@ -93,3 +93,26 @@
 .pk-detail-shell .evolution-card:hover {
   transform: scale(1.04);
 }
+
+.evo-trigger-badge {
+  display: inline-block;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.15em 0.45em;
+  margin-bottom: 0.35rem;
+  border-radius: var(--pk-radius-pill);
+  background: rgba(67, 97, 238, 0.15);
+  color: var(--pk-blue-deep);
+}
+
+.ability-accordion-btn {
+  color: var(--pk-ink) !important;
+  text-decoration: none !important;
+}
+
+.ability-desc {
+  line-height: 1.55;
+  padding-left: 0.15rem;
+}

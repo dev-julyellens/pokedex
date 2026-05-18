@@ -7,6 +7,7 @@
 @import url("components.css");
 @import url("pokemon-card.css");
 @import url("pokemon-modal.css");
+@import url("i18n.css");
 
 /* ——— Accordion histórico ——— */
 .sidebar-history-accordion .history-accordion-label-expanded {

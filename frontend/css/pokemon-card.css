@@ -3,6 +3,14 @@
   display: flex;
   flex-direction: column;
   position: relative;
+  transition: transform var(--pk-duration) var(--pk-ease-bounce),
+    box-shadow var(--pk-duration) var(--pk-ease),
+    border-color var(--pk-duration-fast);
+}
+
+.pokemon-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--pk-shadow-hover), var(--pk-shadow-glow);
 }
 
 .pokemon-card .pokemon-card-hitarea {
