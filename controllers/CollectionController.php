@@ -25,7 +25,7 @@ class CollectionController
             {
                 JsonView::success([], 200);
             }
-            JsonView::error('Banco de dados não configurado.', 503);
+            JsonView::error(Lang::get('db_not_configured'), 503);
         }
 
         switch ($method)
@@ -45,7 +45,7 @@ class CollectionController
                 $body = is_string($raw) ? json_decode($raw, true) : null;
                 if (!is_array($body))
                 {
-                    JsonView::error('JSON inválido.', 400);
+                    JsonView::error(Lang::get('invalid_json'), 400);
                 }
                 $action = isset($body['action']) ? (string) $body['action'] : '';
                 if ($action === 'create')
@@ -56,7 +56,7 @@ class CollectionController
                     {
                         JsonView::success(['id' => $id]);
                     }
-                    JsonView::error('Não foi possível criar a coleção.', 400);
+                    JsonView::error(Lang::get('collection_create_failed'), 400);
                 }
                 if ($action === 'add')
                 {
@@ -67,9 +67,9 @@ class CollectionController
                     {
                         JsonView::success(['ok' => true]);
                     }
-                    JsonView::error('Não foi possível adicionar (duplicado ou coleção inválida).', 400);
+                    JsonView::error(Lang::get('collection_add_failed'), 400);
                 }
-                JsonView::error('Ação inválida.', 400);
+                JsonView::error(Lang::get('invalid_action'), 400);
                 break;
 
             case 'DELETE':
@@ -84,11 +84,11 @@ class CollectionController
                 {
                     JsonView::json(['success' => true]);
                 }
-                JsonView::error('Item ou coleção não encontrado.', 404);
+                JsonView::error(Lang::get('collection_item_not_found'), 404);
                 break;
 
             default:
-                JsonView::error('Método não suportado.', 405);
+                JsonView::error(Lang::get('method_not_supported'), 405);
         }
     }
 }
