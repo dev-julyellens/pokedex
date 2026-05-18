@@ -62,7 +62,7 @@ Detalhe: `api/pokemon.php` → `PokemonModel::findDetail()` — tenta payload em
 | GET | `api/collections.php` | Lista coleções com contagem de itens. |
 | GET | `api/collections.php?items=1` | Itens da coleção `id=1`. |
 | POST | `api/collections.php` JSON `{ "action": "create", "nome": "..." }` ou `{ "action": "add", "collection_id": 1, "pokemon_id": 25, "nome": "pikachu" }` | Criar coleção ou adicionar Pokémon. |
-| DELETE | `api/collections.php?id=5` | Apaga a coleção. |
+| DELETE | `api/collections.php?id=5` | Exclui a coleção. |
 | DELETE | `api/collections.php?collection_id=1&pokemon_id=25` | Remove o Pokémon da coleção. |
 
 ## Funcionalidades
@@ -71,12 +71,12 @@ Detalhe: `api/pokemon.php` → `PokemonModel::findDetail()` — tenta payload em
 
 - **Paginação**, **filtro por região** (Kanto, Unova, Kalos, …), **filtro por tipo** na Pokédex nacional e **filtros avançados** (intervalo `id_min` / `id_max`).
 - **Busca global**: substitui a grade por resultados da API; **Enter** abre o detalhe; **`/`** foca a busca; **`Esc`** fecha modais; **Ctrl+clique** ou **botão do meio** nos cartões abre o detalhe numa nova aba (`?pokemon=`).
-- **Vista compacta** da grelha, **atalhos** (modal), **quiz** (silhueta), **progresso** (contagem de espécies únicas abertas por vista/região), **coleções** (BD), **A11y** (tamanho do texto, alto contraste), **aria-live** na listagem, **pré-busca** das páginas vizinhas, **retry** em `fetch` e na API PHP para 429/502/503/504.
+- **Visualização compacta** da grade, **atalhos** (modal), **quiz** (silhueta), **progresso** (contagem de espécies únicas abertas por visualização/região), **coleções** (BD), **A11y** (tamanho do texto, alto contraste), **aria-live** na listagem, **pré-busca** das páginas vizinhas, **retry** em `fetch` e na API PHP para 429/502/503/504.
 
 ### Detalhe e UX
 
 - Modal com tipos, altura/peso, **curiosidades**, indicação de **origem/cache** e **exportar detalhe em JSON**; habilidades e **evoluções** clicáveis; **adicionar à coleção** a partir do detalhe.
-- **Tema claro/escuro**, link partilhável (`?pokemon=`), Pokémon aleatório, **comparador** (stats + **BST total** com realce), exportar/importar favoritos em JSON, som opcional ao favoritar, **vistos recentemente**, **mini conquistas** (incl. quiz), *skeleton* ao carregar a lista.
+- **Tema claro/escuro**, link compartilhável (`?pokemon=`), Pokémon aleatório, **comparador** (stats + **BST total** com realce), exportar/importar favoritos em JSON, som opcional ao favoritar, **vistos recentemente**, **mini conquistas** (incl. quiz), *skeleton* ao carregar a lista.
 - **Buscas recentes** na sidebar atrás de um acordeão (“Mostrar buscas recentes”).
 - Spinner em overlay; cache em disco no backend e, com BD, cache de lista nacional e de detalhe.
 
@@ -84,8 +84,9 @@ Detalhe: `api/pokemon.php` → `PokemonModel::findDetail()` — tenta payload em
 
 - Favoritos, histórico, **coleções** e tabelas auxiliares de cache (`PokemonStorageModel`).
 
-## Localização (português)
+## Localização (pt-BR)
 
+- Textos da interface centralizados em `frontend/assets/lang/pt-BR.js` e mensagens da API em `lang/pt_BR.php`.
 - **Tipos**: rótulos em PT-BR no backend (`PokeLocalizedStrings::TYPE_PT`).
 - **Habilidades**: `names` da API (`pt-BR` → `pt` → `es` → …), mapa parcial de nomes BR comuns e *fallback*.
 - **Nome, categoria (gênero), texto da Pokédex e rótulos na evolução**: via `pokemon-species`; a API muitas vezes **não** inclui `pt-BR` — usa-se *fallback* (`es`, `en`, etc.) e o modal pode indicar o idioma do texto da Pokédex.
