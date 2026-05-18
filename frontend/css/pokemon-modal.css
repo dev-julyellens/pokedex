@@ -16,6 +16,10 @@
   }
 }
 
+.pk-detail-shell {
+  color: var(--text-primary);
+}
+
 .pk-detail-shell .pk-sprite-stage {
   min-height: 200px;
   display: flex;
@@ -32,8 +36,13 @@
   filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.2));
 }
 
+.pk-sprite-toggle {
+  width: 100%;
+  justify-content: center;
+}
+
 .pk-detail-tabs {
-  border-bottom-color: var(--pk-border) !important;
+  border-bottom-color: var(--border-color);
   flex-wrap: nowrap;
   overflow-x: auto;
   scrollbar-width: none;
@@ -43,10 +52,14 @@
   font-size: 0.78rem;
   font-weight: 700;
   white-space: nowrap;
-  color: var(--pk-muted);
+  color: var(--text-muted);
   border: none;
   border-bottom: 2px solid transparent;
   border-radius: 0;
+}
+
+.pk-detail-tabs .nav-link:hover {
+  color: var(--text-secondary);
 }
 
 .pk-detail-tabs .nav-link.active {
@@ -57,19 +70,29 @@
 
 .pk-tab-panels {
   min-height: 200px;
+  color: var(--text-primary);
 }
 
 .lore-text {
   line-height: 1.65;
-  color: var(--pk-ink);
+  color: var(--text-primary);
 }
 
 .matchup-block .type-badge {
   font-size: 0.72rem;
 }
 
+.matchup-block .matchup-label {
+  color: var(--text-muted);
+}
+
 .bio-grid {
   line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.bio-grid strong {
+  color: var(--text-primary);
 }
 
 .pk-detail-shell .rarity-legendary,
@@ -103,16 +126,21 @@
   padding: 0.15em 0.45em;
   margin-bottom: 0.35rem;
   border-radius: var(--pk-radius-pill);
-  background: rgba(67, 97, 238, 0.15);
-  color: var(--pk-blue-deep);
+  background: var(--evo-trigger-bg);
+  color: var(--evo-trigger-text);
 }
 
 .ability-accordion-btn {
-  color: var(--pk-ink) !important;
-  text-decoration: none !important;
+  color: var(--text-primary);
+  text-decoration: none;
 }
 
 .ability-desc {
   line-height: 1.55;
   padding-left: 0.15rem;
+  color: var(--text-secondary);
+}
+
+#pokemonModalBody h6 {
+  color: var(--text-muted);
 }

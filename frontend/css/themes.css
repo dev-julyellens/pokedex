@@ -1,0 +1,254 @@
+/**
+ * Sistema de temas — utilitários e overrides Bootstrap
+ */
+
+html {
+  transition: var(--theme-transition);
+}
+
+body,
+.app-body,
+.modal-content,
+.list-group-item,
+.form-control,
+.form-select,
+.btn {
+  transition: var(--theme-transition);
+}
+
+/* ——— Utilitários de texto (preferir em vez de text-muted Bootstrap) ——— */
+.text-theme-primary {
+  color: var(--text-primary);
+}
+
+.text-theme-secondary {
+  color: var(--text-secondary);
+}
+
+.text-theme-muted {
+  color: var(--text-muted);
+}
+
+/* Bootstrap: redirecionar classes fixas para tokens do tema */
+.text-muted,
+.small.text-muted,
+p.text-muted {
+  color: var(--text-muted);
+}
+
+.text-body-secondary {
+  color: var(--text-secondary);
+}
+
+.text-dark,
+.text-black {
+  color: var(--text-primary);
+}
+
+/* Links no modal e corpo */
+.modal-pokedex a:not(.btn) {
+  color: var(--accent-primary);
+}
+
+.modal-pokedex .btn-link {
+  color: var(--accent-primary);
+}
+
+/* ——— Modal detalhe ——— */
+.modal-pokedex .modal-body {
+  color: var(--text-primary);
+  background: linear-gradient(180deg, var(--surface-primary) 0%, var(--surface-secondary) 100%);
+}
+
+.modal-pokedex .list-group-item {
+  background-color: var(--surface-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.modal-pokedex .list-group-item .text-capitalize,
+.modal-pokedex .list-group-item span {
+  color: inherit;
+}
+
+.modal-pokedex .list-group-flush > .list-group-item {
+  border-color: var(--border-color);
+}
+
+.pk-detail-shell h4,
+.pk-detail-shell h4 .pk-detail-id {
+  color: var(--text-primary);
+}
+
+.pk-detail-shell .pk-detail-id {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.pk-detail-shell .pk-genus {
+  color: var(--text-secondary);
+}
+
+.pokedex-meta-line {
+  color: var(--text-muted);
+}
+
+.detail-collection-bar {
+  border-color: var(--border-color);
+}
+
+.detail-collection-bar .text-theme-muted,
+.detail-collection-bar .text-muted {
+  color: var(--text-muted);
+}
+
+/* Sprite toggles */
+.modal-pokedex .pk-sprite-toggle .btn-outline-secondary {
+  color: var(--text-secondary);
+  border-color: var(--border-color);
+  background: transparent;
+}
+
+.modal-pokedex .pk-sprite-toggle .btn-outline-secondary:hover {
+  color: var(--text-primary);
+  background: var(--surface-secondary);
+  border-color: var(--border-color);
+}
+
+.modal-pokedex .pk-sprite-toggle .btn-outline-secondary.active {
+  color: var(--text-primary);
+  background: var(--surface-secondary);
+  border-color: var(--accent-primary);
+}
+
+/* Matchups */
+.matchup-block .matchup-label {
+  color: var(--text-muted);
+}
+
+/* Abilities */
+.ability-accordion-btn {
+  color: var(--text-primary);
+}
+
+.ability-desc {
+  color: var(--text-secondary);
+}
+
+/* Evolution */
+.evo-trigger-badge {
+  background: var(--evo-trigger-bg);
+  color: var(--evo-trigger-text);
+}
+
+.evolution-card {
+  background: var(--surface-secondary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+.evolution-card .card-body,
+.evolution-card .small {
+  color: var(--text-primary);
+}
+
+.evolution-card img {
+  background: linear-gradient(180deg, var(--card-bg-top), transparent);
+}
+
+.evolution-arrow {
+  color: var(--text-muted);
+}
+
+/* Lore */
+.lore-text {
+  color: var(--text-primary);
+}
+
+.lore-lang-note {
+  color: var(--text-muted);
+}
+
+/* Stats tab */
+.pk-stats-total {
+  color: var(--text-muted);
+}
+
+/* Sidebar & painéis globais */
+.sidebar-panel .list-group-item {
+  background-color: transparent;
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+.sidebar-panel .list-group-item.text-muted,
+.sidebar-panel .list-group-item .text-muted {
+  color: var(--text-muted);
+}
+
+.catalog-panel .text-muted,
+.form-text {
+  color: var(--text-muted);
+}
+
+/* Comparador */
+.compare-poke-name {
+  color: var(--text-primary);
+}
+
+.compare-stat-name {
+  color: var(--text-muted);
+}
+
+.compare-summary .text-muted {
+  color: var(--text-secondary);
+}
+
+/* Paginação */
+.pagination-pokedex .page-link {
+  color: var(--text-secondary);
+  background: var(--surface-primary);
+  border-color: var(--border-color);
+}
+
+/* Accordion habilidades — fundo do collapse */
+.modal-pokedex .accordion-body {
+  background: var(--surface-secondary);
+  color: var(--text-secondary);
+}
+
+.modal-pokedex .accordion-item {
+  background: var(--surface-secondary);
+  border-color: var(--border-color);
+  color: var(--text-primary);
+}
+
+/* Placeholder / vazio */
+.pk-empty-hint {
+  color: var(--text-muted);
+}
+
+.modal-pokedex .badge.bg-secondary {
+  background-color: var(--surface-secondary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-color);
+}
+
+.modal-pokedex .border-secondary {
+  border-color: var(--border-color);
+}
+
+.trivia-box {
+  color: var(--text-secondary);
+  background: rgba(76, 201, 240, 0.08);
+  border-color: rgba(76, 201, 240, 0.2);
+}
+
+[data-theme='dark'] .trivia-box {
+  background: rgba(76, 201, 240, 0.06);
+  border-color: rgba(76, 201, 240, 0.15);
+}
+
+#globalLoader .small {
+  color: var(--text-primary);
+}

@@ -607,7 +607,8 @@
   border-radius: var(--pk-radius-lg);
   overflow: hidden;
   box-shadow: var(--pk-shadow-lg);
-  background: var(--pk-surface-solid);
+  background: var(--surface-primary);
+  color: var(--text-primary);
 }
 
 .modal-pokedex .modal-header {
@@ -624,7 +625,8 @@
 
 .modal-pokedex .modal-body {
   padding: 1.35rem 1.5rem 1.75rem;
-  background: linear-gradient(180deg, var(--pk-surface-solid) 0%, var(--pk-bg-elevated) 100%);
+  background: linear-gradient(180deg, var(--surface-primary) 0%, var(--surface-secondary) 100%);
+  color: var(--text-primary);
 }
 
 .modal-pokedex .modal-pokedex-close {

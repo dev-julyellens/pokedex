@@ -2,6 +2,7 @@
  * Pokédex — estilos principais (importa módulos + regras específicas)
  */
 @import url("variables.css");
+@import url("themes.css");
 @import url("animations.css");
 @import url("theme.css");
 @import url("components.css");
@@ -72,7 +73,7 @@
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--pk-muted);
+  color: var(--text-muted);
   margin-top: 1.35rem;
   margin-bottom: 0.5rem;
   padding-bottom: 0.25rem;
@@ -136,15 +137,12 @@
 .evolution-card img {
   height: 100px;
   object-fit: contain;
-  background: linear-gradient(180deg, var(--card-bg-top, #f4f6fb), transparent);
+  background: linear-gradient(180deg, var(--card-bg-top), transparent);
 }
 
 .trivia-box {
   padding: 0.75rem 1rem;
   border-radius: var(--pk-radius-sm);
-  background: rgba(76, 201, 240, 0.08);
-  border: 1px solid rgba(76, 201, 240, 0.2);
-  color: var(--pk-ink-soft);
 }
 
 /* ——— Comparador ——— */
@@ -317,13 +315,10 @@
   border-color: var(--pk-border);
 }
 
-[data-theme='dark'] .modal-pokedex .modal-body {
-  background: linear-gradient(180deg, #1a1a26 0%, #12121c 100%);
-}
-
 [data-theme='dark'] .modal-pokedex .table > :not(caption) > * > * {
-  background-color: rgba(30, 30, 44, 0.9);
-  color: var(--pk-ink);
+  background-color: var(--surface-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-color);
 }
 
 [data-theme='dark'] .compare-stat-val.compare-stat-winner {
@@ -334,9 +329,6 @@
   color: #ffb3bc;
 }
 
-[data-theme='dark'] #globalLoader .small {
-  color: var(--pk-ink);
-}
 
 /* ——— A11y ——— */
 html[data-a11y-hc] .app-body {
