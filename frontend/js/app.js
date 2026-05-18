@@ -125,7 +125,7 @@
     const n = Math.min(20, Math.max(1, state.perPage || 20));
     let html = '';
     for (let i = 0; i < n; i++) {
-      html += `<div class="col"><div class="card pokemon-skeleton h-100 shadow-sm border-0"><div class="skeleton-img"></div><div class="card-body py-2 px-2"><div class="skeleton-line skeleton-num"></div><div class="skeleton-line skeleton-name"></div></div></div></div>`;
+      html += `<div class="pokemon-grid-item"><div class="card pokemon-skeleton h-100 border-0"><div class="skeleton-img"></div><div class="card-body py-2 px-2"><div class="skeleton-line skeleton-num"></div><div class="skeleton-line skeleton-name"></div></div></div></div>`;
     }
     return html;
   }
@@ -155,6 +155,42 @@
       const i = els.btnTheme.querySelector('i');
       if (i) i.className = dark ? 'bi bi-sun-fill' : 'bi bi-moon-stars';
     }
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) metaTheme.setAttribute('content', dark ? '#0a0a12' : '#f0f2f8');
+  }
+
+  function closeSidebarDrawer() {
+    const sidebar = document.getElementById('appSidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const toggle = document.getElementById('btnSidebarToggle');
+    if (sidebar) sidebar.classList.remove('is-open');
+    if (overlay) overlay.classList.remove('is-visible');
+    if (toggle) toggle.setAttribute('aria-expanded', 'false');
+  }
+
+  function initModalLayerFix() {
+    document.addEventListener('show.bs.modal', () => {
+      closeSidebarDrawer();
+      showLoader(false);
+    });
+  }
+
+  function initSidebarDrawer() {
+    const sidebar = document.getElementById('appSidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    const toggle = document.getElementById('btnSidebarToggle');
+    if (!sidebar || !overlay || !toggle) return;
+    const close = () => closeSidebarDrawer();
+    const open = () => {
+      sidebar.classList.add('is-open');
+      overlay.classList.add('is-visible');
+      toggle.setAttribute('aria-expanded', 'true');
+    };
+    toggle.addEventListener('click', () => {
+      if (sidebar.classList.contains('is-open')) close();
+      else open();
+    });
+    overlay.addEventListener('click', close);
   }
 
   function initThemeToggle() {
@@ -662,19 +698,35 @@
     );
   }
 
+  function getCardTypeSlug(item) {
+    if (item.types && item.types.length) {
+      const t0 = item.types[0];
+      return typeof t0 === 'string' ? t0 : t0.slug || '';
+    }
+    return '';
+  }
+
   function cardHtml(item) {
     const name = escapeHtml(item.name);
     const num = String(item.id).padStart(4, '0');
     const rawName = String(item.name);
     const href = './?pokemon=' + encodeURIComponent(rawName);
+    const typeSlug = getCardTypeSlug(item);
+    const typeBadgeHtml =
+      item.types && item.types.length
+        ? `<div class="card-type-badges">${renderTypeBadges(item.types)}</div>`
+        : '';
     return `
-      <div class="col">
-        <a href="${href}" class="card pokemon-card h-100 shadow-sm text-decoration-none text-reset d-block" data-name="${name}" data-id="${item.id}" role="link" tabindex="0" aria-label="Ver detalhes de ${name}">
-          <img src="${escapeHtml(item.image)}" class="card-img-top" alt="Arte de ${name}" loading="lazy"
-            onerror="this.onerror=null;this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${item.id}.png'">
-          <div class="card-body py-2 px-2 text-center">
+      <div class="pokemon-grid-item">
+        <a href="${href}" class="card pokemon-card h-100 text-decoration-none text-reset d-block${typeSlug ? ' pokemon-card--type-' + escapeHtml(typeSlug) : ''}" data-name="${name}" data-id="${item.id}" role="link" tabindex="0" aria-label="Ver detalhes de ${name}">
+          <div class="card-img-wrap">
+            <img src="${escapeHtml(item.image)}" class="card-img-top" alt="Arte de ${name}" loading="lazy"
+              onerror="this.onerror=null;this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${item.id}.png'">
+          </div>
+          <div class="card-body text-center">
             <div class="poke-number">#${num}</div>
-            <div class="fw-semibold text-capitalize small">${name}</div>
+            <div class="fw-semibold text-capitalize">${name}</div>
+            ${typeBadgeHtml}
           </div>
         </a>
       </div>`;
@@ -760,13 +812,20 @@
     const arr = o[k] || [];
     const label = k === '__national__' ? t('progress_national') : k;
     const total = state.total || 0;
-    els.regionProgress.innerHTML = `<span class="text-body-secondary">${escapeHtml(
+    els.regionProgress.innerHTML = escapeHtml(
       t('progress_species', {
         label,
         count: arr.length,
         extra: total ? ` · ${t('progress_list_current', { total })}` : '',
       })
-    )}</span>`;
+    );
+    const barFill = document.getElementById('regionProgressBarFill');
+    const barWrap = document.getElementById('regionProgressBar');
+    if (barFill && barWrap) {
+      const pct = total > 0 ? Math.min(100, Math.round((arr.length / total) * 100)) : arr.length > 0 ? 12 : 0;
+      barFill.style.width = pct + '%';
+      barWrap.setAttribute('aria-valuenow', String(pct));
+    }
   }
 
   function applyDensityUi() {
@@ -1784,6 +1843,8 @@
       window.PokedexLangApply();
     }
     initThemeToggle();
+    initSidebarDrawer();
+    initModalLayerFix();
     initSoundToggle();
     renderRecentList();
     renderAchievements();
