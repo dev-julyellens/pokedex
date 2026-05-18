@@ -45,4 +45,9 @@ return [
     'gender_male_only' => 'Somente macho',
     'gender_female_only' => 'Somente fêmea',
     'gender_ratio' => '{male}% macho · {female}% fêmea',
+    'evo_level' => 'Por nível',
+    'evo_item' => 'Pedra / item',
+    'evo_trade' => 'Troca',
+    'evo_friendship' => 'Amizade',
+    'evo_other' => 'Condição especial',
 ];
