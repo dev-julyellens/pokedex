@@ -12,6 +12,7 @@ require_once $root . '/lang/Lang.php';
 require_once $root . '/services/CacheService.php';
 require_once $root . '/services/PokeApiService.php';
 require_once $root . '/services/PokeLocalizedStrings.php';
+require_once $root . '/services/TypeChart.php';
 require_once $root . '/services/DatabaseService.php';
 require_once $root . '/models/RegionModel.php';
 require_once $root . '/models/PokemonStorageModel.php';
