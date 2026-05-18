@@ -19,7 +19,7 @@ class HistoryController
     {
         if ($_SERVER['REQUEST_METHOD'] !== 'GET')
         {
-            JsonView::error('Use GET.', 405);
+            JsonView::error(Lang::get('use_get'), 405);
         }
 
         if (!DatabaseService::available())
