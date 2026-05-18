@@ -315,7 +315,7 @@ class PokemonStorageModel
                 }
                 $parsed[] = [
                     'slug' => $slug,
-                    'label' => (string) ($t['label'] ?? PokeLocalizedStrings::typeLabelPt($slug)),
+                    'label' => (string) ($t['label'] ?? PokeLocalizedStrings::typeLabel($slug)),
                 ];
             }
             if ($parsed !== [])

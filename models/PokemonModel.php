@@ -200,9 +200,13 @@ class PokemonModel
             try
             {
                 $cached = $store->getDetailPayload($id);
-                if (is_array($cached) && isset($cached['pokemon']) && is_array($cached['pokemon']))
+                if (is_array($cached))
                 {
-                    return $this->mapCardSummaryFromRich($cached['pokemon']);
+                    $remapped = $this->remapDetailPayload($cached);
+                    if ($remapped !== null && isset($remapped['pokemon']) && is_array($remapped['pokemon']))
+                    {
+                        return $this->mapCardSummaryFromRich($remapped['pokemon']);
+                    }
                 }
             }
             catch (Throwable)
@@ -284,10 +288,10 @@ class PokemonModel
             'rarity_label' => $p['rarity_label'] ?? Lang::get('rarity_common'),
             'abilities' => $abilities,
             'stats_mini' => [
-                ['id' => 'hp', 'label' => PokeLocalizedStrings::STAT_LABEL_PT['hp'] ?? 'PS', 'base' => $pickStat('hp')],
-                ['id' => 'attack', 'label' => PokeLocalizedStrings::STAT_LABEL_PT['attack'] ?? 'Atk', 'base' => $pickStat('attack')],
-                ['id' => 'defense', 'label' => PokeLocalizedStrings::STAT_LABEL_PT['defense'] ?? 'Def', 'base' => $pickStat('defense')],
-                ['id' => 'speed', 'label' => PokeLocalizedStrings::STAT_LABEL_PT['speed'] ?? 'Vel', 'base' => $pickStat('speed')],
+                ['id' => 'hp', 'label' => PokeLocalizedStrings::statLabel('hp'), 'base' => $pickStat('hp')],
+                ['id' => 'attack', 'label' => PokeLocalizedStrings::statLabel('attack'), 'base' => $pickStat('attack')],
+                ['id' => 'defense', 'label' => PokeLocalizedStrings::statLabel('defense'), 'base' => $pickStat('defense')],
+                ['id' => 'speed', 'label' => PokeLocalizedStrings::statLabel('speed'), 'base' => $pickStat('speed')],
             ],
         ];
     }
@@ -387,7 +391,7 @@ class PokemonModel
             'total' => $total,
             'total_pages' => $totalPages,
             'type' => $typeSlug,
-            'type_label' => PokeLocalizedStrings::typeLabelPt($typeSlug),
+            'type_label' => PokeLocalizedStrings::typeLabel($typeSlug),
         ];
     }
 
@@ -923,7 +927,7 @@ class PokemonModel
             }
             $typesOut[] = [
                 'slug' => $tslug,
-                'label' => PokeLocalizedStrings::typeLabelPt($tslug),
+                'label' => PokeLocalizedStrings::typeLabel($tslug),
             ];
         }
 
@@ -1055,18 +1059,19 @@ class PokemonModel
                 if ($row !== null)
                 {
                     $cached = $row['payload'];
-                    if (is_array($cached) && isset($cached['pokemon'], $cached['evolution_stages']))
+                    if (is_array($cached) && $this->detailPayloadIsCurrent($cached) && $this->detailCacheMatchesLocale($cached))
                     {
-                        $poke = $cached['pokemon'];
-                        if (is_array($poke) && isset($poke['type_matchups'], $poke['sprites']))
+                        $remapped = $this->remapDetailPayload($cached);
+                        if ($remapped !== null)
                         {
-                            unset($cached['meta']);
-                            $cached['meta'] = [
+                            unset($remapped['meta']);
+                            $remapped['meta'] = [
                                 'detail_source' => 'database',
                                 'detail_cached_at' => $row['updated_at'] !== '' ? $row['updated_at'] : null,
+                                'locale' => LocaleService::getAppLocale(),
                             ];
 
-                            return $cached;
+                            return $this->stripI18nSourceFromDetail($remapped);
                         }
                     }
                 }
@@ -1114,7 +1119,9 @@ class PokemonModel
         $out['meta'] = [
             'detail_source' => 'live',
             'detail_cached_at' => $liveAt,
+            'locale' => LocaleService::getAppLocale(),
         ];
+        $out['_i18n_source'] = $this->buildI18nSource($pokemon, $species, $evolutionStages, $evolutionChainUrl);
         if ($store !== null && $detailId > 0)
         {
             try
@@ -1126,7 +1133,221 @@ class PokemonModel
             }
         }
 
-        return $out;
+        return $this->stripI18nSourceFromDetail($out);
+    }
+
+    /**
+     * @param array<string,mixed> $detail
+     * @return array<string,mixed>
+     */
+    private function stripI18nSourceFromDetail(array $detail): array
+    {
+        unset($detail['_i18n_source']);
+
+        return $detail;
+    }
+
+    /**
+     * Dados brutos da API para remapear textos sem nova chamada à PokeAPI.
+     *
+     * @param array<string,mixed> $pokemon
+     * @param array<string,mixed>|null $species
+     * @param list<list<array<string,mixed>>> $evolutionStages
+     * @return array<string,mixed>
+     */
+    private function buildI18nSource(array $pokemon, ?array $species, array $evolutionStages, ?string $evolutionChainUrl): array
+    {
+        $abilitiesRaw = [];
+        foreach ($pokemon['abilities'] ?? [] as $a)
+        {
+            if (!is_array($a) || !isset($a['ability']['name']))
+            {
+                continue;
+            }
+            $aslug = strtolower((string) $a['ability']['name']);
+            $url = (string) ($a['ability']['url'] ?? '');
+            if ($url === '')
+            {
+                continue;
+            }
+            try
+            {
+                $abilitiesRaw[$aslug] = $this->api->fetchJson($url);
+            }
+            catch (Throwable)
+            {
+            }
+        }
+
+        $movesRaw = [];
+        foreach ($pokemon['moves'] ?? [] as $mv) {
+            if (!is_array($mv) || !isset($mv['move']['name'])) {
+                continue;
+            }
+            $mslug = strtolower((string) $mv['move']['name']);
+            $url = (string) ($mv['move']['url'] ?? '');
+            if ($url !== '' && !isset($movesRaw[$mslug])) {
+                try {
+                    $movesRaw[$mslug] = $this->api->fetchJson($url);
+                } catch (Throwable) {
+                }
+            }
+        }
+
+        return [
+            'pokemon' => $pokemon,
+            'species' => is_array($species) ? $species : null,
+            'evolution_stages' => $evolutionStages,
+            'evolution_chain_url' => $evolutionChainUrl,
+            'abilities' => $abilitiesRaw,
+            'moves' => $movesRaw,
+        ];
+    }
+
+    /**
+     * @param array<string,mixed> $cached
+     * @return array<string,mixed>|null
+     */
+    private function remapDetailPayload(array $cached): ?array
+    {
+        $source = $cached['_i18n_source'] ?? null;
+        if (is_array($source) && isset($source['pokemon']) && is_array($source['pokemon']))
+        {
+            $pokemonRaw = $source['pokemon'];
+            $species = isset($source['species']) && is_array($source['species']) ? $source['species'] : null;
+            $stages = is_array($source['evolution_stages'] ?? null) ? $source['evolution_stages'] : [];
+            $chainUrl = isset($source['evolution_chain_url']) ? (string) $source['evolution_chain_url'] : null;
+            $rich = $this->mapPokemonRichFromSource(
+                $pokemonRaw,
+                $species,
+                is_array($source['abilities'] ?? null) ? $source['abilities'] : [],
+                is_array($source['moves'] ?? null) ? $source['moves'] : []
+            );
+
+            return [
+                'pokemon' => $rich,
+                'evolution_stages' => $this->remapEvolutionDisplayNames($stages),
+                'evolution_chain_url' => $chainUrl,
+            ];
+        }
+
+        $poke = $cached['pokemon'] ?? null;
+        if (!is_array($poke) || !isset($poke['type_matchups'], $poke['sprites']))
+        {
+            return null;
+        }
+
+        return [
+            'pokemon' => $poke,
+            'evolution_stages' => is_array($cached['evolution_stages'] ?? null) ? $cached['evolution_stages'] : [],
+            'evolution_chain_url' => $cached['evolution_chain_url'] ?? null,
+        ];
+    }
+
+    /**
+     * @param array<string,mixed> $pokemon
+     * @param array<string,mixed>|null $species
+     * @param array<string, array<string,mixed>> $abilitiesCache
+     * @param array<string, array<string,mixed>> $movesCache
+     * @return array<string,mixed>
+     */
+    private function mapPokemonRichFromSource(array $pokemon, ?array $species, array $abilitiesCache, array $movesCache = []): array
+    {
+        $rich = $this->mapPokemonRich($pokemon, $species);
+        if ($movesCache !== []) {
+            $movesOut = [];
+            foreach ($rich['moves_sample'] ?? [] as $mv) {
+                if (!is_array($mv)) {
+                    continue;
+                }
+                $mslug = (string) ($mv['name'] ?? '');
+                $moveData = $movesCache[$mslug] ?? null;
+                $label = is_array($moveData)
+                    ? PokeLocalizedStrings::pickLocalizedName($moveData['names'] ?? [], $mslug)
+                    : PokeLocalizedStrings::pickLocalizedName([], $mslug);
+                $movesOut[] = [
+                    'name' => $mslug,
+                    'label' => $label,
+                    'level' => (int) ($mv['level'] ?? 0),
+                ];
+            }
+            if ($movesOut !== []) {
+                $rich['moves_sample'] = $movesOut;
+            }
+        }
+        if ($abilitiesCache === [])
+        {
+            return $rich;
+        }
+        $abilitiesOut = [];
+        foreach ($pokemon['abilities'] ?? [] as $a)
+        {
+            if (!is_array($a) || !isset($a['ability']['name']))
+            {
+                continue;
+            }
+            $aslug = strtolower((string) $a['ability']['name']);
+            $abData = $abilitiesCache[$aslug] ?? null;
+            $apiName = is_array($abData) ? PokeLocalizedStrings::pickLocalizedName($abData['names'] ?? [], $aslug) : '';
+            $abilityDesc = is_array($abData)
+                ? PokeLocalizedStrings::pickAbilityEffect($abData['effect_entries'] ?? [])
+                : '';
+            $abilitiesOut[] = [
+                'slug' => $aslug,
+                'label' => PokeLocalizedStrings::abilityLabel($aslug, $apiName),
+                'description' => $abilityDesc,
+                'is_hidden' => !empty($a['is_hidden']),
+            ];
+        }
+        if ($abilitiesOut !== [])
+        {
+            $rich['abilities'] = $abilitiesOut;
+        }
+
+        return $rich;
+    }
+
+    /**
+     * @param list<list<array<string,mixed>>> $stages
+     * @return list<list<array{name:string,species_id:int,display_name:string,trigger_label?:string}>>
+     */
+    private function remapEvolutionDisplayNames(array $stages): array
+    {
+        foreach ($stages as $gi => $group)
+        {
+            if (!is_array($group))
+            {
+                continue;
+            }
+            foreach ($group as $i => $entry)
+            {
+                if (!is_array($entry))
+                {
+                    continue;
+                }
+                $slug = (string) ($entry['name'] ?? '');
+                $display = $slug !== '' ? ucfirst(str_replace('-', ' ', $slug)) : '';
+                $sid = (int) ($entry['species_id'] ?? 0);
+                if ($sid > 0)
+                {
+                    try
+                    {
+                        $sp = $this->api->fetchJson(POKEAPI_BASE . '/pokemon-species/' . $sid);
+                        $picked = PokeLocalizedStrings::pickLocalizedName($sp['names'] ?? [], $slug);
+                        if ($picked !== '')
+                        {
+                            $display = $picked;
+                        }
+                    }
+                    catch (Throwable)
+                    {
+                    }
+                }
+                $stages[$gi][$i]['display_name'] = $display;
+            }
+        }
+
+        return $stages;
     }
 
     /**
@@ -1147,7 +1368,7 @@ class PokemonModel
                     try
                     {
                         $sp = $this->api->fetchJson(POKEAPI_BASE . '/pokemon-species/' . $sid);
-                        $picked = PokeLocalizedStrings::pickLocalizedName($sp['names'] ?? []);
+                        $picked = PokeLocalizedStrings::pickLocalizedName($sp['names'] ?? [], $slug);
                         if ($picked !== '')
                         {
                             $display = $picked;
@@ -1167,16 +1388,114 @@ class PokemonModel
     /**
      * @return list<list<array{name:string,species_id:int,display_name:string}>>
      */
+    /**
+     * @param array<string,mixed> $cached
+     */
+    private function detailCacheMatchesLocale(array $cached): bool
+    {
+        if (isset($cached['_i18n_source']) && is_array($cached['_i18n_source']))
+        {
+            return true;
+        }
+        $metaLocale = isset($cached['meta']['locale']) ? (string) $cached['meta']['locale'] : '';
+
+        return $metaLocale === LocaleService::getAppLocale();
+    }
+
+    /**
+     * @param array<string,mixed> $cached
+     */
+    private function detailPayloadIsCurrent(array $cached): bool
+    {
+        $poke = $cached['pokemon'] ?? null;
+        if (!is_array($poke))
+        {
+            return false;
+        }
+        $abilities = $poke['abilities'] ?? [];
+        if (isset($cached['_i18n_source']) && is_array($cached['_i18n_source']))
+        {
+            return true;
+        }
+        if ($abilities !== [] && is_array($abilities[0] ?? null) && !array_key_exists('description', $abilities[0]))
+        {
+            return false;
+        }
+        $stages = $cached['evolution_stages'] ?? [];
+        if ($stages !== [] && is_array($stages[0][0] ?? null) && !array_key_exists('trigger_label', $stages[0][0]))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @param list<array<string,mixed>> $detailsList
+     */
+    private function formatEvolutionTrigger(array $detailsList): string
+    {
+        if ($detailsList === [])
+        {
+            return '';
+        }
+        $d = $detailsList[0] ?? null;
+        if (!is_array($d))
+        {
+            return '';
+        }
+        $trigger = strtolower((string) ($d['trigger']['name'] ?? ''));
+        if ($trigger === 'level-up')
+        {
+            $lvl = isset($d['min_level']) ? (int) $d['min_level'] : 0;
+            if ($lvl > 0)
+            {
+                return 'Nv. ' . $lvl;
+            }
+
+            return Lang::get('evo_level');
+        }
+        if ($trigger === 'use-item')
+        {
+            $item = strtolower((string) ($d['item']['name'] ?? ''));
+            if ($item !== '')
+            {
+                return ucfirst(str_replace('-', ' ', $item));
+            }
+
+            return Lang::get('evo_item');
+        }
+        if ($trigger === 'trade')
+        {
+            return Lang::get('evo_trade');
+        }
+        if ($trigger === 'shed')
+        {
+            return Lang::get('evo_other');
+        }
+        $happiness = isset($d['min_happiness']) ? (int) $d['min_happiness'] : -1;
+        if ($happiness >= 0)
+        {
+            return Lang::get('evo_friendship');
+        }
+
+        return $trigger !== '' ? ucfirst(str_replace('-', ' ', $trigger)) : Lang::get('evo_other');
+    }
+
+    /**
+     * @return list<list<array{name:string,species_id:int,display_name:string,trigger_label:string}>>
+     */
     private function buildEvolutionStages(array $rootNode): array
     {
         $byDepth = [];
-        $queue = [['node' => $rootNode, 'depth' => 0]];
+        $queue = [['node' => $rootNode, 'depth' => 0, 'trigger' => '']];
 
         while ($queue !== [])
         {
             $item = array_shift($queue);
             $depth = $item['depth'];
             $node = $item['node'];
+            $triggerLabel = (string) ($item['trigger'] ?? '');
             if (!isset($byDepth[$depth]))
             {
                 $byDepth[$depth] = [];
@@ -1188,17 +1507,21 @@ class PokemonModel
                 'name' => $name,
                 'species_id' => PokeApiService::extractIdFromUrl($url),
                 'display_name' => '',
+                'trigger_label' => $triggerLabel,
             ];
             foreach ($node['evolves_to'] ?? [] as $child)
             {
-                if (is_array($child))
+                if (!is_array($child))
                 {
-                    $queue[] = ['node' => $child, 'depth' => $depth + 1];
+                    continue;
                 }
+                $childTrigger = $this->formatEvolutionTrigger($child['evolution_details'] ?? []);
+                $queue[] = ['node' => $child, 'depth' => $depth + 1, 'trigger' => $childTrigger];
             }
         }
 
         ksort($byDepth);
+
         return array_values($byDepth);
     }
 
@@ -1229,46 +1552,48 @@ class PokemonModel
             $aslug = strtolower((string) $a['ability']['name']);
             $url = (string) ($a['ability']['url'] ?? '');
             $apiName = '';
+            $abData = null;
             if ($url !== '')
             {
                 try
                 {
-                    $ab = $this->api->fetchJson($url);
-                    $apiName = PokeLocalizedStrings::pickLocalizedName($ab['names'] ?? []);
+                    $abData = $this->api->fetchJson($url);
+                    $apiName = PokeLocalizedStrings::pickLocalizedName($abData['names'] ?? [], $aslug);
                 }
                 catch (Throwable)
                 {
                     $apiName = '';
+                    $abData = null;
                 }
             }
+            $abilityDesc = is_array($abData)
+                ? PokeLocalizedStrings::pickAbilityEffect($abData['effect_entries'] ?? [])
+                : '';
             $abilitiesOut[] = [
                 'slug' => $aslug,
-                'label' => PokeLocalizedStrings::abilityLabelPt($aslug, $apiName),
+                'label' => PokeLocalizedStrings::abilityLabel($aslug, $apiName),
+                'description' => $abilityDesc,
                 'is_hidden' => !empty($a['is_hidden']),
             ];
         }
 
-        $nameDisplay = $slug !== '' ? ucfirst(str_replace('-', ' ', $slug)) : '';
-        if (is_array($species))
-        {
-            $picked = PokeLocalizedStrings::pickLocalizedName($species['names'] ?? []);
-            if ($picked !== '')
-            {
-                $nameDisplay = $picked;
-            }
-        }
+        $nameDisplay = PokeLocalizedStrings::pickLocalizedName(
+            is_array($species) ? ($species['names'] ?? []) : [],
+            $slug
+        );
 
-        $genus = is_array($species) ? PokeLocalizedStrings::pickGenus($species['genera'] ?? []) : '';
-        $flavor = is_array($species) ? PokeLocalizedStrings::pickFlavorText($species['flavor_text_entries'] ?? []) : null;
-        $flavorText = $flavor['text'] ?? '';
-        $flavorLang = $flavor['language'] ?? '';
+        $genus = is_array($species)
+            ? PokeLocalizedStrings::pickGenus($species['genera'] ?? [], $slug)
+            : PokeLocalizedStrings::pickGenus([], $slug);
+        $flavor = is_array($species)
+            ? PokeLocalizedStrings::pickFlavorText($species['flavor_text_entries'] ?? [], $slug)
+            : PokeLocalizedStrings::pickFlavorText([], $slug);
+        $flavorText = $flavor['text'];
+        $flavorLang = $flavor['language'];
 
-        $habitatSlug = '';
-        if (is_array($species) && isset($species['habitat']) && is_array($species['habitat']))
-        {
-            $habitatSlug = strtolower((string) ($species['habitat']['name'] ?? ''));
-        }
-        $habitatLabel = $habitatSlug !== '' ? ucfirst(str_replace('-', ' ', $habitatSlug)) : '';
+        $habitatRef = is_array($species) && isset($species['habitat']) ? $species['habitat'] : null;
+        $habitatSlug = is_array($habitatRef) ? strtolower((string) ($habitatRef['name'] ?? '')) : '';
+        $habitatLabel = PokeLocalizedStrings::habitatLabel(is_array($habitatRef) ? $habitatRef : null, $habitatSlug);
         $captureRate = is_array($species) && isset($species['capture_rate']) ? (int) $species['capture_rate'] : null;
         $baseHappiness = is_array($species) && isset($species['base_happiness']) ? (int) $species['base_happiness'] : null;
         $isBaby = is_array($species) && !empty($species['is_baby']);
@@ -1287,7 +1612,7 @@ class PokemonModel
             $base = isset($s['base_stat']) ? (int) $s['base_stat'] : 0;
             $statsOut[] = [
                 'id' => $sn,
-                'label' => PokeLocalizedStrings::STAT_LABEL_PT[$sn] ?? ucfirst(str_replace('-', ' ', $sn)),
+                'label' => PokeLocalizedStrings::statLabel($sn),
                 'base' => $base,
             ];
             $effort = isset($s['effort']) ? (int) $s['effort'] : 0;
@@ -1295,7 +1620,7 @@ class PokemonModel
             {
                 $evYieldOut[] = [
                     'id' => $sn,
-                    'label' => PokeLocalizedStrings::STAT_LABEL_PT[$sn] ?? ucfirst(str_replace('-', ' ', $sn)),
+                    'label' => PokeLocalizedStrings::statLabel($sn),
                     'effort' => $effort,
                 ];
             }
@@ -1364,9 +1689,15 @@ class PokemonModel
             'rarity' => $rarity['slug'],
             'rarity_label' => $rarity['label'],
             'color_slug' => $colorSlug,
-            'color_label' => $colorSlug !== '' ? ucfirst(str_replace('-', ' ', $colorSlug)) : '',
+            'color_label' => PokeLocalizedStrings::resourceLabel(
+                is_array($species) && isset($species['color']) ? $species['color'] : null,
+                $colorSlug
+            ),
             'shape_slug' => $shapeSlug,
-            'shape_label' => $shapeSlug !== '' ? ucfirst(str_replace('-', ' ', $shapeSlug)) : '',
+            'shape_label' => PokeLocalizedStrings::resourceLabel(
+                is_array($species) && isset($species['shape']) ? $species['shape'] : null,
+                $shapeSlug
+            ),
             'gender_rate' => $genderRate,
             'gender_label' => $gender,
             'base_experience' => isset($pokemon['base_experience']) ? (int) $pokemon['base_experience'] : null,
@@ -1461,7 +1792,7 @@ class PokemonModel
 
     /**
      * @param array<string,mixed> $pokemon
-     * @return list<array{name:string,level:int}>
+     * @return list<array{name:string,label:string,level:int}>
      */
     private function extractLevelUpMoves(array $pokemon): array
     {
@@ -1472,7 +1803,8 @@ class PokemonModel
             {
                 continue;
             }
-            $moveName = strtolower((string) $mv['move']['name']);
+            $moveRef = $mv['move'];
+            $moveSlug = strtolower((string) ($moveRef['name'] ?? ''));
             $level = null;
             foreach ($mv['version_group_details'] ?? [] as $vg)
             {
@@ -1491,7 +1823,21 @@ class PokemonModel
             {
                 continue;
             }
-            $candidates[] = ['name' => $moveName, 'level' => $level];
+            $label = $moveSlug;
+            $moveUrl = is_array($moveRef) ? trim((string) ($moveRef['url'] ?? '')) : '';
+            if ($moveUrl !== '')
+            {
+                $moveData = TranslationCache::getOrFetch(
+                    $moveUrl,
+                    fn (string $u): array => $this->api->fetchJson($u)
+                );
+                $label = PokeLocalizedStrings::pickLocalizedName($moveData['names'] ?? [], $moveSlug);
+            }
+            else
+            {
+                $label = PokeLocalizedStrings::pickLocalizedName([], $moveSlug);
+            }
+            $candidates[] = ['name' => $moveSlug, 'label' => $label, 'level' => $level];
         }
         usort($candidates, static fn (array $a, array $b): int => $a['level'] <=> $b['level']);
 
