@@ -153,9 +153,143 @@ class PokemonModel
             $result = $this->findListPageForRegion($page, $perPage, $regionKey, $idMin, $idMax);
         }
 
-        $result['items'] = $this->enrichListItemsWithTypes($result['items']);
-
         return $result;
+    }
+
+    /**
+     * Resumos para cards enriquecidos (batch, sob demanda).
+     *
+     * @param list<int> $ids
+     * @return array<int, array<string,mixed>>
+     */
+    public function findCardSummaries(array $ids): array
+    {
+        $ids = array_values(array_unique(array_filter(array_map('intval', $ids), static fn (int $x): bool => $x > 0)));
+        if ($ids === [])
+        {
+            return [];
+        }
+        $ids = array_slice($ids, 0, 24);
+        $out = [];
+        foreach ($ids as $id)
+        {
+            try
+            {
+                $summary = $this->buildCardSummary($id);
+                if ($summary !== null)
+                {
+                    $out[$id] = $summary;
+                }
+            }
+            catch (Throwable)
+            {
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * @return array<string,mixed>|null
+     */
+    private function buildCardSummary(int $id): ?array
+    {
+        $store = $this->pokemonStore();
+        if ($store !== null)
+        {
+            try
+            {
+                $cached = $store->getDetailPayload($id);
+                if (is_array($cached) && isset($cached['pokemon']) && is_array($cached['pokemon']))
+                {
+                    return $this->mapCardSummaryFromRich($cached['pokemon']);
+                }
+            }
+            catch (Throwable)
+            {
+            }
+        }
+
+        try
+        {
+            $pokemon = $this->api->getPokemonByIdOrName((string) $id);
+        }
+        catch (Throwable)
+        {
+            return null;
+        }
+
+        $species = null;
+        $speciesUrl = $pokemon['species']['url'] ?? '';
+        if (is_string($speciesUrl) && $speciesUrl !== '')
+        {
+            try
+            {
+                $species = $this->api->getSpeciesByUrl($speciesUrl);
+            }
+            catch (Throwable)
+            {
+                $species = null;
+            }
+        }
+
+        $rich = $this->mapPokemonRich($pokemon, is_array($species) ? $species : null);
+
+        return $this->mapCardSummaryFromRich($rich);
+    }
+
+    /**
+     * @param array<string,mixed> $p
+     * @return array<string,mixed>
+     */
+    private function mapCardSummaryFromRich(array $p): array
+    {
+        $stats = $p['stats'] ?? [];
+        $pickStat = static function (string $key) use ($stats): int {
+            foreach ($stats as $s)
+            {
+                if (is_array($s) && ($s['id'] ?? '') === $key)
+                {
+                    return (int) ($s['base'] ?? 0);
+                }
+            }
+
+            return 0;
+        };
+
+        $abilities = [];
+        foreach (array_slice($p['abilities'] ?? [], 0, 2) as $a)
+        {
+            if (!is_array($a))
+            {
+                continue;
+            }
+            $abilities[] = [
+                'slug' => (string) ($a['slug'] ?? ''),
+                'label' => (string) ($a['label'] ?? ''),
+                'is_hidden' => !empty($a['is_hidden']),
+            ];
+        }
+
+        return [
+            'id' => (int) ($p['id'] ?? 0),
+            'name' => (string) ($p['name'] ?? ''),
+            'name_display' => (string) ($p['name_display'] ?? $p['name'] ?? ''),
+            'image' => (string) ($p['image'] ?? ''),
+            'types' => $p['types'] ?? [],
+            'height' => (int) ($p['height'] ?? 0),
+            'weight' => (int) ($p['weight'] ?? 0),
+            'generation' => $p['generation'] ?? null,
+            'rarity' => $p['rarity'] ?? 'common',
+            'rarity_label' => $p['rarity_label'] ?? Lang::get('rarity_common'),
+            'abilities' => $abilities,
+            'stats_mini' => [
+                ['id' => 'hp', 'label' => PokeLocalizedStrings::STAT_LABEL_PT['hp'] ?? 'PS', 'base' => $pickStat('hp')],
+                ['id' => 'attack', 'label' => PokeLocalizedStrings::STAT_LABEL_PT['attack'] ?? 'Atk', 'base' => $pickStat('attack')],
+                ['id' => 'defense', 'label' => PokeLocalizedStrings::STAT_LABEL_PT['defense'] ?? 'Def', 'base' => $pickStat('defense')],
+                ['id' => 'speed', 'label' => PokeLocalizedStrings::STAT_LABEL_PT['speed'] ?? 'Vel', 'base' => $pickStat('speed')],
+            ],
+        ];
     }
 
     /**
@@ -685,7 +819,6 @@ class PokemonModel
         $store = $this->pokemonStore();
         $items = $this->hydrateListItemsFromDb($store, $items);
         $this->persistListItemsCache($store, $items);
-        $items = $this->enrichListItemsWithTypes($items);
 
         return [
             'items' => $items,
@@ -924,13 +1057,17 @@ class PokemonModel
                     $cached = $row['payload'];
                     if (is_array($cached) && isset($cached['pokemon'], $cached['evolution_stages']))
                     {
-                        unset($cached['meta']);
-                        $cached['meta'] = [
-                            'detail_source' => 'database',
-                            'detail_cached_at' => $row['updated_at'] !== '' ? $row['updated_at'] : null,
-                        ];
+                        $poke = $cached['pokemon'];
+                        if (is_array($poke) && isset($poke['type_matchups'], $poke['sprites']))
+                        {
+                            unset($cached['meta']);
+                            $cached['meta'] = [
+                                'detail_source' => 'database',
+                                'detail_cached_at' => $row['updated_at'] !== '' ? $row['updated_at'] : null,
+                            ];
 
-                        return $cached;
+                            return $cached;
+                        }
                     }
                 }
             }
@@ -1139,6 +1276,7 @@ class PokemonModel
         $isMythical = is_array($species) && !empty($species['is_mythical']);
 
         $statsOut = [];
+        $evYieldOut = [];
         foreach ($pokemon['stats'] ?? [] as $s)
         {
             if (!is_array($s) || !isset($s['stat']['name']))
@@ -1146,11 +1284,58 @@ class PokemonModel
                 continue;
             }
             $sn = strtolower((string) $s['stat']['name']);
+            $base = isset($s['base_stat']) ? (int) $s['base_stat'] : 0;
             $statsOut[] = [
                 'id' => $sn,
                 'label' => PokeLocalizedStrings::STAT_LABEL_PT[$sn] ?? ucfirst(str_replace('-', ' ', $sn)),
-                'base' => isset($s['base_stat']) ? (int) $s['base_stat'] : 0,
+                'base' => $base,
             ];
+            $effort = isset($s['effort']) ? (int) $s['effort'] : 0;
+            if ($effort > 0)
+            {
+                $evYieldOut[] = [
+                    'id' => $sn,
+                    'label' => PokeLocalizedStrings::STAT_LABEL_PT[$sn] ?? ucfirst(str_replace('-', ' ', $sn)),
+                    'effort' => $effort,
+                ];
+            }
+        }
+
+        $typeSlugs = array_map(static fn (array $t): string => (string) ($t['slug'] ?? ''), $typesOut);
+        $matchups = TypeChart::defensiveMatchups($typeSlugs);
+
+        $generation = $this->extractGeneration(is_array($species) ? $species : null);
+        $rarity = $this->resolveRarity($isMythical, $isLegendary, $isBaby, $captureRate);
+
+        $spritesOut = [
+            'official' => $img,
+            'front' => $sprites['front_default'] ?? null,
+            'front_shiny' => $sprites['front_shiny'] ?? null,
+        ];
+
+        $colorSlug = '';
+        $shapeSlug = '';
+        if (is_array($species))
+        {
+            if (isset($species['color']) && is_array($species['color']))
+            {
+                $colorSlug = strtolower((string) ($species['color']['name'] ?? ''));
+            }
+            if (isset($species['shape']) && is_array($species['shape']))
+            {
+                $shapeSlug = strtolower((string) ($species['shape']['name'] ?? ''));
+            }
+        }
+
+        $genderRate = is_array($species) && isset($species['gender_rate']) ? (int) $species['gender_rate'] : null;
+        $gender = $this->formatGenderRate($genderRate);
+
+        $movesOut = $this->extractLevelUpMoves($pokemon);
+
+        $statsTotal = 0;
+        foreach ($statsOut as $st)
+        {
+            $statsTotal += (int) ($st['base'] ?? 0);
         }
 
         return [
@@ -1158,6 +1343,7 @@ class PokemonModel
             'name' => $slug,
             'name_display' => $nameDisplay,
             'image' => $img,
+            'sprites' => $spritesOut,
             'types' => $typesOut,
             'height' => isset($pokemon['height']) ? (int) $pokemon['height'] : 0,
             'weight' => isset($pokemon['weight']) ? (int) $pokemon['weight'] : 0,
@@ -1166,6 +1352,7 @@ class PokemonModel
             'flavor_text' => $flavorText,
             'flavor_language' => $flavorLang,
             'stats' => $statsOut,
+            'stats_total' => $statsTotal,
             'habitat_slug' => $habitatSlug,
             'habitat_label' => $habitatLabel,
             'capture_rate' => $captureRate,
@@ -1173,6 +1360,141 @@ class PokemonModel
             'is_baby' => $isBaby,
             'is_legendary' => $isLegendary,
             'is_mythical' => $isMythical,
+            'generation' => $generation,
+            'rarity' => $rarity['slug'],
+            'rarity_label' => $rarity['label'],
+            'color_slug' => $colorSlug,
+            'color_label' => $colorSlug !== '' ? ucfirst(str_replace('-', ' ', $colorSlug)) : '',
+            'shape_slug' => $shapeSlug,
+            'shape_label' => $shapeSlug !== '' ? ucfirst(str_replace('-', ' ', $shapeSlug)) : '',
+            'gender_rate' => $genderRate,
+            'gender_label' => $gender,
+            'base_experience' => isset($pokemon['base_experience']) ? (int) $pokemon['base_experience'] : null,
+            'type_matchups' => $matchups,
+            'moves_sample' => $movesOut,
+            'ev_yield' => $evYieldOut,
         ];
+    }
+
+    /**
+     * @param array<string,mixed>|null $species
+     * @return array{id:int,name:string,label:string}|null
+     */
+    private function extractGeneration(?array $species): ?array
+    {
+        if (!is_array($species))
+        {
+            return null;
+        }
+        $genUrl = $species['generation']['url'] ?? '';
+        if (!is_string($genUrl) || $genUrl === '')
+        {
+            return null;
+        }
+        try
+        {
+            $gen = $this->api->fetchJson($genUrl);
+        }
+        catch (Throwable)
+        {
+            return null;
+        }
+        $gid = PokeApiService::extractIdFromUrl($genUrl);
+        $name = strtolower((string) ($gen['name'] ?? 'generation-' . $gid));
+        $num = $gid > 0 ? $gid : (int) preg_replace('/\D+/', '', $name);
+
+        return [
+            'id' => $num,
+            'name' => $name,
+            'label' => $num > 0 ? Lang::get('generation_n', ['n' => $num]) : ucfirst(str_replace('-', ' ', $name)),
+        ];
+    }
+
+    /**
+     * @return array{slug:string,label:string}
+     */
+    private function resolveRarity(bool $mythical, bool $legendary, bool $baby, ?int $captureRate): array
+    {
+        if ($mythical)
+        {
+            return ['slug' => 'mythical', 'label' => Lang::get('rarity_mythical')];
+        }
+        if ($legendary)
+        {
+            return ['slug' => 'legendary', 'label' => Lang::get('rarity_legendary')];
+        }
+        if ($baby)
+        {
+            return ['slug' => 'baby', 'label' => Lang::get('rarity_baby')];
+        }
+        if ($captureRate !== null && $captureRate > 0 && $captureRate <= 25)
+        {
+            return ['slug' => 'rare', 'label' => Lang::get('rarity_rare')];
+        }
+
+        return ['slug' => 'common', 'label' => Lang::get('rarity_common')];
+    }
+
+    private function formatGenderRate(?int $rate): string
+    {
+        if ($rate === null)
+        {
+            return Lang::get('gender_unknown');
+        }
+        if ($rate === -1)
+        {
+            return Lang::get('gender_none');
+        }
+        if ($rate === 0)
+        {
+            return Lang::get('gender_male_only');
+        }
+        if ($rate === 8)
+        {
+            return Lang::get('gender_female_only');
+        }
+        $femalePct = ($rate / 8) * 100;
+        $malePct = 100 - $femalePct;
+
+        return Lang::get('gender_ratio', ['male' => round($malePct), 'female' => round($femalePct)]);
+    }
+
+    /**
+     * @param array<string,mixed> $pokemon
+     * @return list<array{name:string,level:int}>
+     */
+    private function extractLevelUpMoves(array $pokemon): array
+    {
+        $candidates = [];
+        foreach ($pokemon['moves'] ?? [] as $mv)
+        {
+            if (!is_array($mv) || !isset($mv['move']['name']))
+            {
+                continue;
+            }
+            $moveName = strtolower((string) $mv['move']['name']);
+            $level = null;
+            foreach ($mv['version_group_details'] ?? [] as $vg)
+            {
+                if (!is_array($vg))
+                {
+                    continue;
+                }
+                $method = $vg['move_learn_method']['name'] ?? '';
+                if ($method === 'level-up')
+                {
+                    $level = (int) ($vg['level_learned_at'] ?? 0);
+                    break;
+                }
+            }
+            if ($level === null)
+            {
+                continue;
+            }
+            $candidates[] = ['name' => $moveName, 'level' => $level];
+        }
+        usort($candidates, static fn (array $a, array $b): int => $a['level'] <=> $b['level']);
+
+        return array_slice($candidates, 0, 8);
     }
 }
