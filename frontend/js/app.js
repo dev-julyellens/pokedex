@@ -4,6 +4,8 @@
 (function () {
   'use strict';
 
+  const g = typeof window !== 'undefined' ? window : globalThis;
+
   const t =
     typeof window.PokedexT === 'function'
       ? window.PokedexT
@@ -110,6 +112,15 @@
   const toast = els.toastEl ? new bootstrap.Toast(els.toastEl, { delay: 3200 }) : null;
 
   let currentDetail = null;
+
+  const Card = g.PokedexCard;
+  const Modal = g.PokedexModal;
+  const Stats = g.PokedexStats;
+  if (!Card || !Modal || !Stats) {
+    console.error('Módulos Pokédex não carregados. Verifique a ordem dos scripts em index.html.');
+  }
+  const renderTypeBadges = Stats ? Stats.renderTypeBadges.bind(Stats) : function () { return ''; };
+  const cardHtml = Card ? Card.cardHtml.bind(Card) : function () { return ''; };
 
   const LS_THEME = 'pokedex_theme';
   const LS_SOUND = 'pokedex_sound';
@@ -646,41 +657,6 @@
     return data;
   }
 
-  /** Classes Bootstrap 5 (text-bg-*) para tipos. */
-  function typeBadgeClass(type) {
-    const map = {
-      normal: 'text-bg-secondary',
-      fire: 'text-bg-danger',
-      water: 'text-bg-primary',
-      grass: 'text-bg-success',
-      electric: 'text-bg-warning',
-      ice: 'text-bg-info',
-      fighting: 'text-bg-dark',
-      poison: 'text-bg-dark',
-      ground: 'text-bg-warning',
-      flying: 'text-bg-info',
-      psychic: 'text-bg-info',
-      bug: 'text-bg-success',
-      rock: 'text-bg-secondary',
-      ghost: 'text-bg-dark',
-      dragon: 'text-bg-danger',
-      dark: 'text-bg-dark',
-      steel: 'text-bg-secondary',
-      fairy: 'text-bg-danger',
-    };
-    return map[type] || 'text-bg-secondary';
-  }
-
-  function renderTypeBadges(types) {
-    return (types || [])
-      .map((t) => {
-        const slug = typeof t === 'string' ? t : t.slug || '';
-        const label = typeof t === 'string' ? t : t.label || slug;
-        return `<span class="badge type-badge ${typeBadgeClass(slug)} me-1">${escapeHtml(label)}</span>`;
-      })
-      .join('');
-  }
-
   function escapeHtml(s) {
     return String(s)
       .replace(/&/g, '&amp;')
@@ -698,39 +674,6 @@
     );
   }
 
-  function getCardTypeSlug(item) {
-    if (item.types && item.types.length) {
-      const t0 = item.types[0];
-      return typeof t0 === 'string' ? t0 : t0.slug || '';
-    }
-    return '';
-  }
-
-  function cardHtml(item) {
-    const name = escapeHtml(item.name);
-    const num = String(item.id).padStart(4, '0');
-    const rawName = String(item.name);
-    const href = './?pokemon=' + encodeURIComponent(rawName);
-    const typeSlug = getCardTypeSlug(item);
-    const typeBadgeHtml =
-      item.types && item.types.length
-        ? `<div class="card-type-badges">${renderTypeBadges(item.types)}</div>`
-        : '';
-    return `
-      <div class="pokemon-grid-item">
-        <a href="${href}" class="card pokemon-card h-100 text-decoration-none text-reset d-block${typeSlug ? ' pokemon-card--type-' + escapeHtml(typeSlug) : ''}" data-name="${name}" data-id="${item.id}" role="link" tabindex="0" aria-label="Ver detalhes de ${name}">
-          <div class="card-img-wrap">
-            <img src="${escapeHtml(item.image)}" class="card-img-top" alt="Arte de ${name}" loading="lazy"
-              onerror="this.onerror=null;this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${item.id}.png'">
-          </div>
-          <div class="card-body text-center">
-            <div class="poke-number">#${num}</div>
-            <div class="fw-semibold text-capitalize">${name}</div>
-            ${typeBadgeHtml}
-          </div>
-        </a>
-      </div>`;
-  }
 
   function buildListUrl(page, limitOverride) {
     const limit = limitOverride != null ? limitOverride : state.perPage;
@@ -1357,6 +1300,7 @@
       updateListMeta();
       renderSearchToolbar();
       announceCatalog(t('search_announce', { count: items.length }));
+      if (items.length && Card) Card.hydrateGrid(els.grid);
       window.scrollTo({ top: els.grid.offsetTop ? els.grid.offsetTop - 24 : 0, behavior: 'smooth' });
     } catch (e) {
       if (token === navToken) {
@@ -1409,6 +1353,7 @@
       prefetchListAdjacent();
       prefetchNextQuizRound();
       renderRegionProgress();
+      if (items.length && Card) Card.hydrateGrid(els.grid);
       window.scrollTo({ top: els.grid.offsetTop ? els.grid.offsetTop - 24 : 0, behavior: 'smooth' });
     } catch (e) {
       if (token === navToken) {
@@ -1430,8 +1375,45 @@
         : 'name=' + encodeURIComponent(String(identifier).trim().toLowerCase());
       const json = await fetchJson(API_BASE + 'pokemon.php?' + q);
       currentDetail = json.data;
-      els.modalBody.innerHTML = renderDetail(currentDetail);
-      wireModalInteractions();
+      if (!Modal) {
+        showToast(t('modules_load_failed'), true);
+        return;
+      }
+      els.modalBody.innerHTML = Modal.renderDetail(currentDetail);
+      Modal.wireModalInteractions(els.modalBody, currentDetail, {
+        onOpenPokemon: openPokemon,
+        onExportJson: function (detail) {
+          if (!detail) return;
+          const blob = new Blob([JSON.stringify(detail, null, 2)], { type: 'application/json' });
+          const a = document.createElement('a');
+          const pid = detail.pokemon && detail.pokemon.id ? String(detail.pokemon.id) : 'pokemon';
+          a.href = URL.createObjectURL(blob);
+          a.download = 'pokemon-' + pid + '.json';
+          a.click();
+          URL.revokeObjectURL(a.href);
+          showToast(t('export_json_done'));
+        },
+        onLoadCollections: loadCollectionSelectOptions,
+        onAddToCollection: async function (sel, detail) {
+          const cid = parseInt(String(sel.value), 10);
+          if (!cid || !detail || !detail.pokemon) {
+            showToast(t('collection_choose'), true);
+            return;
+          }
+          const pid = parseInt(String(detail.pokemon.id), 10);
+          const nome = String(detail.pokemon.name || '').trim();
+          try {
+            await fetchJson(API_BASE + 'collections.php', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ action: 'add', collection_id: cid, pokemon_id: pid, nome }),
+            });
+            showToast(t('collection_added'));
+          } catch (e) {
+            showToast(e.message || t('collection_add_failed'), true);
+          }
+        },
+      });
       await syncFavoriteIdsFromApi();
       updateFavoriteButton();
       if (currentDetail && currentDetail.pokemon) {
@@ -1450,190 +1432,33 @@
     }
   }
 
-  function renderEvolutionStages(stages) {
-    if (!stages || !stages.length) {
-      return `<p class="text-muted small mb-0">${escapeHtml(t('evolutions_none'))}</p>`;
-    }
-    const parts = [];
-    for (let gi = 0; gi < stages.length; gi++) {
-      const group = stages[gi];
-      const cards = group
-        .map((spec) => {
-          const sid = spec.species_id || 0;
-          const img =
-            'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/' +
-            sid +
-            '.png';
-          return `
-            <div class="card evolution-card" data-open-name="${escapeHtml(spec.name)}">
-              <img src="${img}" class="card-img-top" alt="${escapeHtml(spec.name)}" loading="lazy"
-                onerror="this.onerror=null;this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${sid}.png'">
-              <div class="card-body p-2 text-center">
-                <span class="small fw-semibold">${escapeHtml(spec.display_name || spec.name)}</span>
-              </div>
-            </div>`;
-        })
-        .join('');
-      parts.push(`<div class="evolution-stage-row">${cards}</div>`);
-      if (gi < stages.length - 1) {
-        parts.push(
-          '<div class="evolution-arrow" role="presentation" aria-hidden="true"><i class="bi bi-chevron-down"></i></div>'
-        );
-      }
-    }
-    return `<div class="evolution-flow evolution-flow-vertical">${parts.join('')}</div>`;
-  }
-
-  function renderDetail(data) {
-    const p = data.pokemon;
-    const h = p.height / 10;
-    const w = p.weight / 10;
-    const titleName = p.name_display || p.name;
-    const abilities = (p.abilities || [])
-      .map((a) => {
-        const label = typeof a === 'object' && a !== null ? a.label || a.slug || a.name || '' : String(a);
-        const hidden = a.is_hidden ? ` <span class="badge bg-secondary">${escapeHtml(t('ability_hidden'))}</span>` : '';
-        return `<li>${escapeHtml(String(label))}${hidden}</li>`;
-      })
-      .join('');
-
-    const genusHtml = p.genus
-      ? `<p class="text-muted small mb-2">${escapeHtml(p.genus)}</p>`
-      : '';
-
-    let flavorHtml = '';
-    if (p.flavor_text) {
-      const langNote =
-        p.flavor_language && !String(p.flavor_language).startsWith('pt')
-          ? `<span class="text-muted small"> (texto da Pokédex: ${escapeHtml(String(p.flavor_language))})</span>`
-          : '';
-      flavorHtml = `<h6 class="mt-3">${escapeHtml(t('pokedex_heading'))}</h6><p class="small fst-italic border-start border-3 ps-2 mb-1">${escapeHtml(
-        p.flavor_text
-      )}</p>${langNote}`;
-    }
-
-    const statsRows = (p.stats || [])
-      .map(
-        (s) =>
-          `<tr><td>${escapeHtml(s.label)}</td><td class="text-end fw-semibold">${Number(s.base)}</td></tr>`
-      )
-      .join('');
-    const statsHtml =
-      statsRows !== ''
-        ? `<h6 class="mt-3">${escapeHtml(t('stats_heading'))}</h6><div class="table-responsive"><table class="table table-sm table-borderless mb-0"><tbody>${statsRows}</tbody></table></div>`
-        : '';
-
-    let triviaHtml = '';
-    const bits = [];
-    if (p.habitat_label) bits.push(`Habitat típico: <strong>${escapeHtml(String(p.habitat_label))}</strong>`);
-    if (p.capture_rate != null && p.capture_rate !== '') bits.push(`Taxa de captura: <strong>${escapeHtml(String(p.capture_rate))}</strong> (255 = mais difícil)`);
-    if (p.base_happiness != null && p.base_happiness !== '') bits.push(`Felicidade base: <strong>${escapeHtml(String(p.base_happiness))}</strong>`);
-    if (p.is_baby) bits.push(`<span class="badge bg-info text-dark">${escapeHtml(t('badge_baby'))}</span>`);
-    if (p.is_legendary) bits.push(`<span class="badge bg-warning text-dark">${escapeHtml(t('badge_legendary'))}</span>`);
-    if (p.is_mythical) bits.push(`<span class="badge bg-danger">${escapeHtml(t('badge_mythical'))}</span>`);
-    if (bits.length) {
-      triviaHtml = `<h6 class="mt-3">${escapeHtml(t('trivia_heading'))}</h6><p class="small trivia-box mb-0">${bits.join(' · ')}</p>`;
-    }
-
-    let metaHtml = '';
-    const meta = data.meta;
-    if (meta && (meta.detail_cached_at != null || meta.detail_source)) {
-      const src = meta.detail_source === 'database' ? t('meta_cache_db') : t('meta_cache_api');
-      const cachedAt = meta.detail_cached_at != null ? escapeHtml(String(meta.detail_cached_at)) : t('empty_dash');
-      metaHtml = `<p class="small text-muted mb-2 pokedex-meta-line" role="note"><i class="bi bi-info-circle me-1"></i>${escapeHtml(src)}. <time datetime="${cachedAt}">${cachedAt}</time> · <button type="button" class="btn btn-link btn-sm p-0 align-baseline" id="btnExportDetailJson">${escapeHtml(t('export_json'))}</button></p>`;
-    }
-    const collectionBar = `<div class="detail-collection-bar d-flex flex-wrap gap-2 align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25">
-      <span class="small text-muted mb-0">${escapeHtml(t('collection_label'))}</span>
-      <select id="detailCollectionSelect" class="form-select form-select-sm" style="max-width:14rem" aria-label="${escapeHtml(t('collection_select_aria'))}"></select>
-      <button type="button" class="btn btn-sm btn-primary" id="btnDetailAddToCollection">${escapeHtml(t('collection_add_btn'))}</button>
-    </div>`;
-
-    return `
-      <div class="row g-3">
-        <div class="col-md-5 text-center">
-          <img src="${escapeHtml(p.image)}" class="img-fluid modal-pokemon-img mb-2" alt="${escapeHtml(titleName)}"
-            onerror="this.onerror=null;this.src='https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${p.id}.png'">
-          <div>${renderTypeBadges(p.types)}</div>
-        </div>
-        <div class="col-md-7">
-          ${collectionBar}
-          ${metaHtml}
-          <h4 class="mb-1">${escapeHtml(titleName)} <span class="text-muted fs-6">#${String(p.id).padStart(4, '0')}</span></h4>
-          ${genusHtml}
-          <p class="mb-2"><strong>Altura:</strong> ${h} m &nbsp;|&nbsp; <strong>Peso:</strong> ${w} kg</p>
-          ${triviaHtml}
-          <h6 class="mt-3">${escapeHtml(t('abilities'))}</h6>
-          <ul class="mb-3">${abilities || '<li class="text-muted">—</li>'}</ul>
-          ${statsHtml}
-          ${flavorHtml}
-          <h6 class="mt-3">${escapeHtml(t('evolutions'))}</h6>
-          ${renderEvolutionStages(data.evolution_stages)}
-        </div>
-      </div>`;
-  }
-
-  function wireModalInteractions() {
-    els.modalBody.querySelectorAll('[data-open-name]').forEach((node) => {
-      node.addEventListener('click', () => {
-        const n = node.getAttribute('data-open-name');
-        if (n) openPokemon(n);
-      });
-    });
-    const ex = els.modalBody.querySelector('#btnExportDetailJson');
-    if (ex) {
-      ex.addEventListener('click', () => {
-        if (!currentDetail) return;
-        const blob = new Blob([JSON.stringify(currentDetail, null, 2)], { type: 'application/json' });
-        const a = document.createElement('a');
-        const pid = currentDetail.pokemon && currentDetail.pokemon.id ? String(currentDetail.pokemon.id) : 'pokemon';
-        a.href = URL.createObjectURL(blob);
-        a.download = 'pokemon-' + pid + '.json';
-        a.click();
-        URL.revokeObjectURL(a.href);
-        showToast(t('export_json_done'));
-      });
-    }
-    const sel = els.modalBody.querySelector('#detailCollectionSelect');
-    const addB = els.modalBody.querySelector('#btnDetailAddToCollection');
-    if (sel && addB) {
-      loadCollectionSelectOptions(sel);
-      addB.addEventListener('click', async () => {
-        const cid = parseInt(String(sel.value), 10);
-        if (!cid || !currentDetail || !currentDetail.pokemon) {
-          showToast(t('collection_choose'), true);
-          return;
-        }
-        const pid = parseInt(String(currentDetail.pokemon.id), 10);
-        const nome = String(currentDetail.pokemon.name || '').trim();
-        try {
-          await fetchJson(API_BASE + 'collections.php', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'add', collection_id: cid, pokemon_id: pid, nome }),
-          });
-          showToast(t('collection_added'));
-        } catch (e) {
-          showToast(e.message || t('collection_add_failed'), true);
-        }
-      });
-    }
-  }
 
   function onGridClick(e) {
-    const card = e.target.closest('a.pokemon-card');
-    if (!card) return;
+    const moreBtn = e.target.closest('[data-card-more]');
+    if (moreBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      const name = moreBtn.getAttribute('data-pokemon-name');
+      const id = moreBtn.getAttribute('data-pokemon-id');
+      if (name || id) openPokemon(name || id);
+      return;
+    }
+    const hit = e.target.closest('a.pokemon-card-hitarea');
+    if (!hit) return;
     if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.button !== 0) return;
     e.preventDefault();
-    const name = card.getAttribute('data-name');
+    const article = hit.closest('article.pokemon-card');
+    const name = article ? article.getAttribute('data-name') : null;
     if (name) openPokemon(name);
   }
 
   function onGridKeydown(e) {
-    const card = e.target.closest('a.pokemon-card');
-    if (!card) return;
+    const hit = e.target.closest('a.pokemon-card-hitarea');
+    if (!hit) return;
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      const name = card.getAttribute('data-name');
+      const article = hit.closest('article.pokemon-card');
+      const name = article ? article.getAttribute('data-name') : null;
       if (name) openPokemon(name);
     }
   }
