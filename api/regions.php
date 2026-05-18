@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Lista regiões (MVC): GET — para filtro / agrupamento por região.
+ * Lista regiões (MVC): GET - para filtro / agrupamento por região.
  */
 
 declare(strict_types=1);
