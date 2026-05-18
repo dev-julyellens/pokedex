@@ -1,5 +1,5 @@
 /**
- * Renderização da cadeia evolutiva.
+ * Renderização da cadeia evolutiva com gatilhos (nível, item, troca).
  */
 (function (global) {
   'use strict';
@@ -24,10 +24,15 @@
         .map(function (spec) {
           const sid = spec.species_id || 0;
           const img = Api.officialArtUrl(sid);
+          const trigger =
+            spec.trigger_label && String(spec.trigger_label).trim()
+              ? '<span class="evo-trigger-badge">' + esc(spec.trigger_label) + '</span>'
+              : '';
           return (
             '<button type="button" class="card evolution-card border-0" data-open-name="' +
             esc(spec.name) +
             '">' +
+            trigger +
             '<img src="' +
             esc(img) +
             '" class="card-img-top" alt="' +

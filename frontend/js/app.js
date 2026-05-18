@@ -141,12 +141,63 @@
     return html;
   }
 
+  const TYPE_SLUGS = [
+    'normal', 'fire', 'water', 'electric', 'grass', 'ice', 'fighting', 'poison',
+    'ground', 'flying', 'psychic', 'bug', 'rock', 'ghost', 'dragon', 'dark', 'steel', 'fairy',
+  ];
+
+  function populateTypeFilter() {
+    const tf = els.typeFilter;
+    if (!tf) return;
+    const prev = tf.value;
+    let html = '<option value="">' + escapeHtml(t('html_all_types')) + '</option>';
+    TYPE_SLUGS.forEach((slug) => {
+      html +=
+        '<option value="' +
+        slug +
+        '">' +
+        escapeHtml(t('type_' + slug)) +
+        '</option>';
+    });
+    tf.innerHTML = html;
+    if (prev && TYPE_SLUGS.indexOf(prev) !== -1) tf.value = prev;
+  }
+
   function syncTypeFilterEnabled() {
     const tf = els.typeFilter;
     if (!tf) return;
     const reg = els.regionFilter && els.regionFilter.value;
     tf.disabled = !!reg;
     if (reg) tf.value = '';
+  }
+
+  async function onLocaleChange() {
+    if (g.PokedexTranslationCache && typeof g.PokedexTranslationCache.clearAll === 'function') {
+      g.PokedexTranslationCache.clearAll();
+    }
+    if (g.PokedexApi) {
+      if (typeof g.PokedexApi.clearCardCache === 'function') g.PokedexApi.clearCardCache();
+      if (typeof g.PokedexApi.clearDetailCache === 'function') g.PokedexApi.clearDetailCache();
+    }
+    populateTypeFilter();
+    renderAchievements();
+    renderRecentList();
+    if (els.loader && els.loader.querySelector('[data-i18n]') && window.PokedexLangApply) {
+      window.PokedexLangApply(els.loader);
+    }
+    const raw = (els.search && els.search.value ? els.search.value : '').trim();
+    if (raw.length >= 2 || /^\d+$/.test(raw)) {
+      await runGlobalSearch(raw);
+    } else {
+      await loadListPage(state.page || 1);
+    }
+    if (currentDetail && currentDetail.pokemon) {
+      try {
+        await openPokemon(currentDetail.pokemon.name || currentDetail.pokemon.id);
+      } catch (e) {
+        /* silencioso */
+      }
+    }
   }
 
   function applyTheme(dark) {
@@ -624,11 +675,18 @@
     toast.show();
   }
 
+  function apiUrl(url) {
+    if (window.PokedexLangApi && typeof window.PokedexLangApi.withLang === 'function') {
+      return window.PokedexLangApi.withLang(url);
+    }
+    return url;
+  }
+
   async function fetchJson(url, options = {}, attempt = 1) {
     const maxAttempts = 4;
     let res;
     try {
-      res = await fetch(url, {
+      res = await fetch(apiUrl(url), {
         ...options,
         headers: {
           Accept: 'application/json',
@@ -1664,9 +1722,16 @@
   }
 
   async function init() {
+    if (window.PokedexI18n && window.PokedexI18n.ready) {
+      await window.PokedexI18n.ready;
+    }
     if (typeof window.PokedexLangApply === 'function') {
       window.PokedexLangApply();
     }
+    populateTypeFilter();
+    window.addEventListener('pokedex:localechange', () => {
+      onLocaleChange();
+    });
     initThemeToggle();
     initSidebarDrawer();
     initModalLayerFix();

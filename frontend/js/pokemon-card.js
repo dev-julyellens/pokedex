@@ -19,8 +19,6 @@
           return s;
         };
 
-  let hydrateToken = 0;
-
   function getCardTypeSlug(item) {
     if (item.types && item.types.length) {
       const t0 = item.types[0];
@@ -165,35 +163,102 @@
     }
   }
 
-  async function hydrateGrid(gridEl) {
-    if (!gridEl) return;
-    const token = ++hydrateToken;
-    const articles = gridEl.querySelectorAll('article.pokemon-card[data-id]');
+  let cardObserver = null;
+
+  async function hydrateArticles(articles) {
     const ids = [];
+    const list = [];
     articles.forEach(function (a) {
+      if (a.dataset.cardHydrated === '1') return;
       const id = parseInt(a.getAttribute('data-id'), 10);
-      if (Number.isFinite(id) && id > 0) ids.push(id);
+      if (Number.isFinite(id) && id > 0) {
+        ids.push(id);
+        list.push(a);
+      }
     });
     if (!ids.length) return;
 
     try {
       const map = await Api.fetchCardSummaries(ids);
-      if (token !== hydrateToken) return;
-      articles.forEach(function (article) {
+      list.forEach(function (article) {
         const id = parseInt(article.getAttribute('data-id'), 10);
-        if (map[id]) applySummaryToCard(article, map[id]);
+        if (map[id]) {
+          applySummaryToCard(article, map[id]);
+          article.dataset.cardHydrated = '1';
+        }
       });
     } catch (e) {
-      articles.forEach(function (article) {
+      list.forEach(function (article) {
         const meta = article.querySelector('[data-card-meta]');
         if (meta) meta.classList.remove('card-meta--loading');
       });
     }
   }
 
+  async function hydrateGrid(gridEl) {
+    if (!gridEl) return;
+    const articles = gridEl.querySelectorAll('article.pokemon-card[data-id]');
+    if (!articles.length) return;
+
+    if (cardObserver) {
+      cardObserver.disconnect();
+      cardObserver = null;
+    }
+
+    if (typeof IntersectionObserver === 'undefined') {
+      await hydrateArticles(articles);
+      return;
+    }
+
+    cardObserver = new IntersectionObserver(
+      function (entries) {
+        const pending = [];
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          const article = entry.target;
+          cardObserver.unobserve(article);
+          pending.push(article);
+        });
+        if (pending.length) hydrateArticles(pending);
+      },
+      { root: null, rootMargin: '120px', threshold: 0.05 }
+    );
+
+    articles.forEach(function (article) {
+      if (article.dataset.cardHydrated === '1') return;
+      cardObserver.observe(article);
+    });
+
+    const visible = [];
+    articles.forEach(function (article) {
+      if (article.dataset.cardHydrated === '1') return;
+      const r = article.getBoundingClientRect();
+      if (r.top < window.innerHeight + 120 && r.bottom > -120) visible.push(article);
+    });
+    if (visible.length) await hydrateArticles(visible);
+  }
+
+  function resetHydration(gridEl) {
+    if (!gridEl) return;
+    gridEl.querySelectorAll('article.pokemon-card[data-id]').forEach(function (article) {
+      delete article.dataset.cardHydrated;
+    });
+  }
+
+  if (global.addEventListener) {
+    global.addEventListener('pokedex:localechange', function () {
+      const grid = document.getElementById('pokemonGrid');
+      if (grid) {
+        resetHydration(grid);
+        hydrateGrid(grid);
+      }
+    });
+  }
+
   global.PokedexCard = {
     cardHtml: cardHtml,
     hydrateGrid: hydrateGrid,
+    resetHydration: resetHydration,
     getCardTypeSlug: getCardTypeSlug,
     applySummaryToCard: applySummaryToCard,
   };

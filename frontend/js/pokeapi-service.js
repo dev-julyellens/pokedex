@@ -1,8 +1,10 @@
 /**
- * Cliente HTTP da API local Pokédex.
+ * Cliente HTTP da API local — cache por idioma via PokedexTranslationCache.
  */
 (function (global) {
   'use strict';
+
+  const Cache = global.PokedexTranslationCache;
 
   const API_BASE = (function () {
     const path = global.location.pathname || '/';
@@ -10,9 +12,6 @@
     if (idx === -1) return 'api/';
     return path.slice(0, idx) + '/api/';
   })();
-
-  const cardCache = new Map();
-  const detailCache = new Map();
 
   function escapeHtml(s) {
     return String(s)
@@ -22,8 +21,15 @@
       .replace(/"/g, '&quot;');
   }
 
+  function withLang(url) {
+    if (global.PokedexLangApi && typeof global.PokedexLangApi.withLang === 'function') {
+      return global.PokedexLangApi.withLang(url);
+    }
+    return url;
+  }
+
   async function fetchJson(url, options) {
-    const res = await fetch(url, Object.assign({ headers: { Accept: 'application/json' } }, options || {}));
+    const res = await fetch(withLang(url), Object.assign({ headers: { Accept: 'application/json' } }, options || {}));
     const json = await res.json();
     if (!res.ok || !json.success) {
       throw new Error((json && json.error) || 'Erro na requisição');
@@ -55,8 +61,9 @@
     (ids || []).forEach((id) => {
       const n = parseInt(String(id), 10);
       if (!Number.isFinite(n) || n <= 0) return;
-      if (cardCache.has(n)) {
-        out[n] = cardCache.get(n);
+      const cached = Cache ? Cache.get('card', n) : null;
+      if (cached) {
+        out[n] = cached;
       } else {
         missing.push(n);
       }
@@ -67,19 +74,32 @@
     const items = (json.data && json.data.items) || {};
     Object.keys(items).forEach((k) => {
       const n = parseInt(k, 10);
-      cardCache.set(n, items[k]);
+      if (Cache) Cache.set('card', n, items[k]);
       out[n] = items[k];
     });
     return out;
   }
 
   async function fetchPokemonDetail(identifier) {
-    const key = String(identifier).trim().toLowerCase();
-    if (detailCache.has(key)) return detailCache.get(key);
-    const q = /^\d+$/.test(key) ? 'id=' + encodeURIComponent(key) : 'name=' + encodeURIComponent(key);
+    const idKey = String(identifier).trim().toLowerCase();
+    if (Cache) {
+      return Cache.getOrFetch('detail', idKey, async () => {
+        const q = /^\d+$/.test(idKey) ? 'id=' + encodeURIComponent(idKey) : 'name=' + encodeURIComponent(idKey);
+        const json = await fetchJson(API_BASE + 'pokemon.php?' + q);
+        return json.data;
+      });
+    }
+    const q = /^\d+$/.test(idKey) ? 'id=' + encodeURIComponent(idKey) : 'name=' + encodeURIComponent(idKey);
     const json = await fetchJson(API_BASE + 'pokemon.php?' + q);
-    detailCache.set(key, json.data);
     return json.data;
+  }
+
+  function clearCardCache() {
+    if (Cache) Cache.clearAll();
+  }
+
+  function clearDetailCache() {
+    if (Cache) Cache.clearAll();
   }
 
   global.PokedexApi = {
@@ -90,7 +110,7 @@
     fetchPokemonDetail,
     pokemonSpriteUrl,
     officialArtUrl,
-    clearCardCache: () => cardCache.clear(),
-    clearDetailCache: () => detailCache.clear(),
+    clearCardCache,
+    clearDetailCache,
   };
 })(window);

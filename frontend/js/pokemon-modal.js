@@ -135,12 +135,40 @@
   function renderTabAbilities(p) {
     const esc = Api.escapeHtml;
     const abilities = (p.abilities || [])
-      .map(function (a) {
+      .map(function (a, idx) {
         const label = a.label || a.slug || '';
         const hidden = a.is_hidden
           ? ' <span class="badge bg-secondary">' + esc(t('ability_hidden')) + '</span>'
           : '';
-        return '<li class="list-group-item d-flex justify-content-between align-items-center">' + esc(label) + hidden + '</li>';
+        const desc = a.description
+          ? '<p class="small text-muted mb-0 mt-1 ability-desc">' + esc(a.description) + '</p>'
+          : '';
+        const collapseId = 'abilityDesc' + idx;
+        if (!desc) {
+          return (
+            '<li class="list-group-item d-flex justify-content-between align-items-center">' +
+            esc(label) +
+            hidden +
+            '</li>'
+          );
+        }
+        return (
+          '<li class="list-group-item">' +
+          '<button class="btn btn-link btn-sm p-0 text-start w-100 ability-accordion-btn" type="button" data-bs-toggle="collapse" data-bs-target="#' +
+          collapseId +
+          '" aria-expanded="false">' +
+          '<span class="fw-semibold">' +
+          esc(label) +
+          '</span>' +
+          hidden +
+          '</button>' +
+          '<div class="collapse" id="' +
+          collapseId +
+          '">' +
+          desc +
+          '</div>' +
+          '</li>'
+        );
       })
       .join('');
     let evHtml = '';
@@ -166,7 +194,7 @@
           .map(function (m) {
             return (
               '<li class="list-group-item d-flex justify-content-between"><span class="text-capitalize">' +
-              esc(m.name.replace(/-/g, ' ')) +
+              esc(m.label || m.name || '') +
               '</span><span class="text-muted">Lv ' +
               esc(String(m.level)) +
               '</span></li>'
