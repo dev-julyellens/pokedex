@@ -91,6 +91,39 @@ class PokemonController
         }
     }
 
+    /** GET api/cards.php?ids=1,2,3 */
+    public function cards(): void
+    {
+        $raw = trim((string) ($_GET['ids'] ?? ''));
+        if ($raw === '')
+        {
+            JsonView::error(Lang::get('inform_ids'), 400);
+        }
+        $ids = [];
+        foreach (preg_split('/\s*,\s*/', $raw) as $part)
+        {
+            $n = (int) $part;
+            if ($n > 0)
+            {
+                $ids[] = $n;
+            }
+        }
+        if ($ids === [])
+        {
+            JsonView::error(Lang::get('inform_ids'), 400);
+        }
+
+        try
+        {
+            $items = $this->pokemonModel->findCardSummaries($ids);
+            JsonView::success(['items' => $items]);
+        }
+        catch (Throwable $e)
+        {
+            JsonView::error($e->getMessage(), 502);
+        }
+    }
+
     /** GET api/search.php?q=pika&limit=80&region=kanto (region opcional) */
     public function search(): void
     {
