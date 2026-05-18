@@ -76,7 +76,7 @@ class TypeChart
 
         foreach ($immuneSet as $slug => $_)
         {
-            $immune[] = ['slug' => $slug, 'label' => PokeLocalizedStrings::typeLabelPt($slug)];
+            $immune[] = ['slug' => $slug, 'label' => PokeLocalizedStrings::typeLabel($slug)];
         }
 
         foreach ($weakMult as $slug => $mult)
@@ -87,7 +87,7 @@ class TypeChart
             }
             if ($mult >= 2)
             {
-                $weak[] = ['slug' => $slug, 'label' => PokeLocalizedStrings::typeLabelPt($slug)];
+                $weak[] = ['slug' => $slug, 'label' => PokeLocalizedStrings::typeLabel($slug)];
             }
         }
 
@@ -99,7 +99,7 @@ class TypeChart
             }
             if ($mult <= 0.5 && ($weakMult[$slug] ?? 0) < 2)
             {
-                $resist[] = ['slug' => $slug, 'label' => PokeLocalizedStrings::typeLabelPt($slug)];
+                $resist[] = ['slug' => $slug, 'label' => PokeLocalizedStrings::typeLabel($slug)];
             }
         }
 
