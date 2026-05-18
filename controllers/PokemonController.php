@@ -69,7 +69,7 @@ class PokemonController
         }
         else
         {
-            JsonView::error('Informe id ou name.', 400);
+            JsonView::error(Lang::get('inform_id_or_name'), 400);
         }
 
         try
@@ -83,7 +83,7 @@ class PokemonController
         }
         catch (InvalidArgumentException $e)
         {
-            JsonView::error('Pokémon não encontrado.', 404);
+            JsonView::error(Lang::get('pokemon_not_found'), 404);
         }
         catch (Throwable $e)
         {
@@ -100,11 +100,11 @@ class PokemonController
 
         if ($q === '')
         {
-            JsonView::error('Informe um termo de busca (q).', 400);
+            JsonView::error(Lang::get('inform_search_term'), 400);
         }
         if (mb_strlen($q) < 2 && !preg_match('/^\d+$/', $q))
         {
-            JsonView::error('Use pelo menos 2 letras ou um ID numérico.', 400);
+            JsonView::error(Lang::get('search_min_length'), 400);
         }
 
         try
