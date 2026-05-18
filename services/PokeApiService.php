@@ -30,7 +30,7 @@ class PokeApiService
         $data = json_decode($body, true);
         if (!is_array($data))
         {
-            throw new RuntimeException('Resposta inválida da PokeAPI.');
+            throw new RuntimeException(Lang::get('pokeapi_invalid_response'));
         }
         $this->cache->set($url, $data);
         return $data;
@@ -63,7 +63,7 @@ class PokeApiService
         }
         throw $lastException instanceof Throwable
             ? $lastException
-            : new RuntimeException('Falha ao obter dados da PokeAPI.');
+            : new RuntimeException(Lang::get('pokeapi_fetch_failed'));
     }
 
     /**
@@ -86,19 +86,19 @@ class PokeApiService
             curl_close($ch);
             if ($out === false)
             {
-                throw new RuntimeException('Falha de rede: ' . $err);
+                throw new RuntimeException(Lang::get('network_failure', ['error' => $err]));
             }
             if ($code === 404)
             {
-                throw new InvalidArgumentException('Recurso não encontrado.');
+                throw new InvalidArgumentException(Lang::get('resource_not_found'));
             }
             if ($code === 429 || $code === 502 || $code === 503 || $code === 504)
             {
-                throw new RuntimeException('PokeAPI temporariamente indisponível (HTTP ' . $code . ').');
+                throw new RuntimeException(Lang::get('pokeapi_unavailable', ['code' => $code]));
             }
             if ($code < 200 || $code >= 300)
             {
-                throw new RuntimeException('PokeAPI retornou HTTP ' . $code);
+                throw new RuntimeException(Lang::get('pokeapi_http_error', ['code' => $code]));
             }
             return $out;
         }
@@ -112,7 +112,7 @@ class PokeApiService
         $out = @file_get_contents($url, false, $ctx);
         if ($out === false)
         {
-            throw new RuntimeException('Falha ao obter dados da PokeAPI.');
+            throw new RuntimeException(Lang::get('pokeapi_fetch_failed'));
         }
         return $out;
     }
