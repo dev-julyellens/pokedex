@@ -137,17 +137,25 @@ class PokemonModel
         {
             if ($regionKey !== '')
             {
-                return $this->findListPageForRegion($page, $perPage, $regionKey, $idMin, $idMax);
+                $result = $this->findListPageForRegion($page, $perPage, $regionKey, $idMin, $idMax);
             }
-
-            return $this->findListPageByType($page, $perPage, $typeKey, $idMin, $idMax);
+            else
+            {
+                $result = $this->findListPageByType($page, $perPage, $typeKey, $idMin, $idMax);
+            }
         }
-        if ($regionKey === '')
+        elseif ($regionKey === '')
         {
-            return $this->findListPageNational($page, $perPage, $idMin, $idMax);
+            $result = $this->findListPageNational($page, $perPage, $idMin, $idMax);
+        }
+        else
+        {
+            $result = $this->findListPageForRegion($page, $perPage, $regionKey, $idMin, $idMax);
         }
 
-        return $this->findListPageForRegion($page, $perPage, $regionKey, $idMin, $idMax);
+        $result['items'] = $this->enrichListItemsWithTypes($result['items']);
+
+        return $result;
     }
 
     /**
@@ -677,6 +685,7 @@ class PokemonModel
         $store = $this->pokemonStore();
         $items = $this->hydrateListItemsFromDb($store, $items);
         $this->persistListItemsCache($store, $items);
+        $items = $this->enrichListItemsWithTypes($items);
 
         return [
             'items' => $items,
@@ -685,6 +694,107 @@ class PokemonModel
             'scope' => $scope,
             'scope_label' => $scopeLabel,
         ];
+    }
+
+    /**
+     * @param list<array{id:int,name:string,image:string}> $items
+     * @return list<array{id:int,name:string,image:string,types?:list<array{slug:string,label:string}>>}>
+     */
+    private function enrichListItemsWithTypes(array $items): array
+    {
+        if ($items === [])
+        {
+            return [];
+        }
+
+        $ids = [];
+        foreach ($items as $it)
+        {
+            $id = (int) ($it['id'] ?? 0);
+            if ($id > 0)
+            {
+                $ids[] = $id;
+            }
+        }
+
+        $typesById = [];
+        $store = $this->pokemonStore();
+        if ($store !== null && $ids !== [])
+        {
+            try
+            {
+                $typesById = $store->fetchTypesFromDetailByIds($ids);
+            }
+            catch (Throwable)
+            {
+                $typesById = [];
+            }
+        }
+
+        foreach ($items as &$item)
+        {
+            $id = (int) ($item['id'] ?? 0);
+            if ($id > 0 && isset($typesById[$id]))
+            {
+                $item['types'] = $typesById[$id];
+            }
+        }
+        unset($item);
+
+        foreach ($items as &$item)
+        {
+            if (!empty($item['types']))
+            {
+                continue;
+            }
+            $id = (int) ($item['id'] ?? 0);
+            if ($id <= 0)
+            {
+                continue;
+            }
+            try
+            {
+                $pokemon = $this->api->getPokemonByIdOrName((string) $id);
+                $types = $this->extractTypesFromPokemon($pokemon);
+                if ($types !== [])
+                {
+                    $item['types'] = $types;
+                }
+            }
+            catch (Throwable)
+            {
+            }
+        }
+        unset($item);
+
+        return $items;
+    }
+
+    /**
+     * @param array<string,mixed> $pokemon resposta GET /pokemon/{id}
+     * @return list<array{slug:string,label:string}>
+     */
+    private function extractTypesFromPokemon(array $pokemon): array
+    {
+        $typesOut = [];
+        foreach ($pokemon['types'] ?? [] as $t)
+        {
+            if (!is_array($t) || !isset($t['type']['name']))
+            {
+                continue;
+            }
+            $tslug = strtolower((string) $t['type']['name']);
+            if ($tslug === '')
+            {
+                continue;
+            }
+            $typesOut[] = [
+                'slug' => $tslug,
+                'label' => PokeLocalizedStrings::typeLabelPt($tslug),
+            ];
+        }
+
+        return $typesOut;
     }
 
     /**
@@ -970,19 +1080,7 @@ class PokemonModel
         $official = $other['official-artwork'] ?? [];
         $img = $official['front_default'] ?? ($sprites['front_default'] ?? null);
 
-        $typesOut = [];
-        foreach ($pokemon['types'] ?? [] as $t)
-        {
-            if (!is_array($t) || !isset($t['type']['name']))
-            {
-                continue;
-            }
-            $tslug = strtolower((string) $t['type']['name']);
-            $typesOut[] = [
-                'slug' => $tslug,
-                'label' => PokeLocalizedStrings::typeLabelPt($tslug),
-            ];
-        }
+        $typesOut = $this->extractTypesFromPokemon($pokemon);
 
         $abilitiesOut = [];
         foreach ($pokemon['abilities'] ?? [] as $a)
