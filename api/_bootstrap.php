@@ -8,6 +8,7 @@ declare(strict_types=1);
 
 $root = dirname(__DIR__);
 require_once $root . '/config/config.php';
+require_once $root . '/lang/Lang.php';
 require_once $root . '/services/CacheService.php';
 require_once $root . '/services/PokeApiService.php';
 require_once $root . '/services/PokeLocalizedStrings.php';
