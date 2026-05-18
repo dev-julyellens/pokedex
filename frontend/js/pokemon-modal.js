@@ -32,7 +32,7 @@
       .join('');
     return (
       '<div class="matchup-block mb-2">' +
-      '<div class="small fw-semibold text-muted mb-1">' +
+      '<div class="small fw-semibold matchup-label mb-1">' +
       esc(title) +
       '</div>' +
       '<div class="d-flex flex-wrap">' +
@@ -47,7 +47,7 @@
     const h = (parseInt(String(p.height), 10) || 0) / 10;
     const w = (parseInt(String(p.weight), 10) || 0) / 10;
     const titleName = p.name_display || p.name;
-    const genusHtml = p.genus ? '<p class="text-muted small mb-2">' + esc(p.genus) + '</p>' : '';
+    const genusHtml = p.genus ? '<p class="pk-genus small mb-2">' + esc(p.genus) + '</p>' : '';
     const gen =
       p.generation && p.generation.label
         ? '<span class="badge bg-secondary me-1">' + esc(p.generation.label) + '</span>'
@@ -76,7 +76,7 @@
       const src = meta.detail_source === 'database' ? t('meta_cache_db') : t('meta_cache_api');
       const cachedAt = meta.detail_cached_at != null ? esc(String(meta.detail_cached_at)) : t('empty_dash');
       metaHtml =
-        '<p class="small text-muted mb-2 pokedex-meta-line" role="note"><i class="bi bi-info-circle me-1"></i>' +
+        '<p class="small pokedex-meta-line mb-2" role="note"><i class="bi bi-info-circle me-1"></i>' +
         esc(src) +
         '. <time datetime="' +
         cachedAt +
@@ -89,7 +89,7 @@
 
     const collectionBar =
       '<div class="detail-collection-bar d-flex flex-wrap gap-2 align-items-center mb-3 pb-2 border-bottom border-secondary border-opacity-25">' +
-      '<span class="small text-muted mb-0">' +
+      '<span class="small text-theme-muted mb-0">' +
       esc(t('collection_label')) +
       '</span>' +
       '<select id="detailCollectionSelect" class="form-select form-select-sm" style="max-width:14rem" aria-label="' +
@@ -105,7 +105,7 @@
       metaHtml +
       '<h4 class="mb-1">' +
       esc(titleName) +
-      ' <span class="text-muted fs-6">#' +
+      ' <span class="pk-detail-id fs-6">#' +
       String(p.id).padStart(4, '0') +
       '</span></h4>' +
       genusHtml +
@@ -141,7 +141,7 @@
           ? ' <span class="badge bg-secondary">' + esc(t('ability_hidden')) + '</span>'
           : '';
         const desc = a.description
-          ? '<p class="small text-muted mb-0 mt-1 ability-desc">' + esc(a.description) + '</p>'
+          ? '<p class="small ability-desc mb-0 mt-1">' + esc(a.description) + '</p>'
           : '';
         const collapseId = 'abilityDesc' + idx;
         if (!desc) {
@@ -195,7 +195,7 @@
             return (
               '<li class="list-group-item d-flex justify-content-between"><span class="text-capitalize">' +
               esc(m.label || m.name || '') +
-              '</span><span class="text-muted">Lv ' +
+              '</span><span class="text-theme-muted">Lv ' +
               esc(String(m.level)) +
               '</span></li>'
             );
@@ -205,7 +205,7 @@
     }
     return (
       '<ul class="list-group list-group-flush">' +
-      (abilities || '<li class="list-group-item text-muted">—</li>') +
+      (abilities || '<li class="list-group-item pk-empty-hint">—</li>') +
       '</ul>' +
       evHtml +
       movesHtml
@@ -215,11 +215,11 @@
   function renderTabLore(p) {
     const esc = Api.escapeHtml;
     if (!p.flavor_text) {
-      return '<p class="text-muted small mb-0">' + esc(t('lore_empty')) + '</p>';
+      return '<p class="pk-empty-hint small mb-0">' + esc(t('lore_empty')) + '</p>';
     }
     const langNote =
       p.flavor_language && !String(p.flavor_language).startsWith('pt')
-        ? '<span class="text-muted small"> (' + esc(t('flavor_lang_note', { lang: p.flavor_language })) + ')</span>'
+        ? '<span class="lore-lang-note small"> (' + esc(t('flavor_lang_note', { lang: p.flavor_language })) + ')</span>'
         : '';
     return (
       '<p class="lore-text fst-italic border-start border-3 ps-3 mb-1">' + esc(p.flavor_text) + '</p>' + langNote
@@ -264,7 +264,7 @@
       esc(shiny) +
       '" class="img-fluid pk-sprite-alt d-none" alt="" data-sprite-shiny>' +
       '</div>' +
-      '<div class="btn-group btn-group-sm mb-2" role="group" aria-label="' +
+      '<div class="btn-group btn-group-sm mb-2 pk-sprite-toggle" role="group" aria-label="' +
       esc(t('sprite_toggle_aria')) +
       '">' +
       '<button type="button" class="btn btn-outline-secondary active" data-sprite-mode="official">' +

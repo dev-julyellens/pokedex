@@ -99,7 +99,7 @@
     let totalLine = '';
     if (total != null) {
       totalLine =
-        '<p class="pk-stats-total small text-muted mb-0 mt-2">' +
+        '<p class="pk-stats-total small mb-0 mt-2">' +
         esc(t('stats_total')) +
         ': <strong>' +
         esc(String(total)) +

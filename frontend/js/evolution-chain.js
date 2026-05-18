@@ -15,7 +15,7 @@
   function renderEvolutionStages(stages) {
     const esc = Api.escapeHtml;
     if (!stages || !stages.length) {
-      return '<p class="text-muted small mb-0">' + esc(t('evolutions_none')) + '</p>';
+      return '<p class="pk-empty-hint small mb-0">' + esc(t('evolutions_none')) + '</p>';
     }
     const parts = [];
     for (let gi = 0; gi < stages.length; gi++) {
